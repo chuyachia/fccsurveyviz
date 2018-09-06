@@ -25,9 +25,9 @@ export default function(data){
     .range(Map.mapPalette.map(function(e){return e.color}));
 
 
-    Map.createColor(Map.piePalette.map(function(e){return e.value}),Map.piePalette.map(function(e){return e.color}));
-    Map.createArc(Map.radius);
-    Map.createPie(function(d) { return d.count; });
+    Map.piecolor = Map.createColor(Map.piePalette.map(function(e){return e.value}),Map.piePalette.map(function(e){return e.color}));
+    Map.arc = Map.createArc(Map.radius);
+    Map.pie = Map.createPie(function(d) { return d.count; });
     Map.createChart();
     d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
     .then(function(geojson) {
@@ -93,7 +93,7 @@ export default function(data){
       })
       .style('fill','grey')
       .transition()
-      .duration(1000)
+      .duration(3000)
       .style('fill', function(d) { return Map.color(d.female+d.male+d.other)});
 
       var legend = Map.chart.selectAll('.legend')

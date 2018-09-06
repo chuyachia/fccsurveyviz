@@ -95,7 +95,7 @@ export default function(data){
       .attr("y",ageHist.innerHeight())
       .attr('height',0)
       .transition()
-      .duration(1000)
+      .duration(3000)
       .attr("y",function(d){return ageHist.yscale(d.length)})
       .attr('height',function(d){return ageHist.innerHeight()-ageHist.yscale(d.length)});   
 

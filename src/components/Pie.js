@@ -3,17 +3,17 @@ import {arc,pie,scaleOrdinal} from 'd3';
 export default {
   createArc : function(radius,innerradius){
     innerradius = (typeof innerradius =='undefined')?0:innerradius;
-    this.arc = arc()
+    return arc()
     .outerRadius(radius)
     .innerRadius(innerradius);
   },
   createPie: function(callback){
-    this.pie = pie()
+    return pie()
     .sort(null)
     .value(callback);
   },
   createColor:function(domain, range){
-    this.piecolor= scaleOrdinal()
+    return scaleOrdinal()
     .domain(domain)
     .range(range);
   }
