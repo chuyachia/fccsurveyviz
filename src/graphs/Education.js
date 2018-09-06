@@ -7,8 +7,8 @@ import * as d3 from "d3";
 export default function(data){
     var eduPie = Object.assign({},Graph,Pie,{data:{degree:data.degree,major:data.major},h:600,radius:180,id:'education',title:'Educational background'});
     var totalCoders = eduPie.data.major.map(function(d){return d.count}).reduce(function(a,b){return a+b});
-    eduPie.data.initmajor = eduPie.data.major.map(function(d,i){return i==0?{value:d.value,count:totalCoders}:{value:d.value,count:0}});
-    eduPie.data.initdegree = eduPie.data.degree.map(function(d,i){return i==0?{value:d.value,count:totalCoders}:{value:d.value,count:0}});
+    eduPie.data.initmajor = eduPie.data.major.map(function(d,i){return i==0?Object.assign({},d,{count:totalCoders}):Object.assign({},d,{count:0})});
+    eduPie.data.initdegree = eduPie.data.degree.map(function(d,i){return i==0?Object.assign({},d,{count:totalCoders}):Object.assign({},d,{count:0})});
     var majorCats = eduPie.data.major.map(function(d){return d.value});
     majorCats = majorCats.filter(function(d,i){return majorCats.indexOf(d)==i});
     var categoryColors2 = palette('tol-dv',majorCats.length);
@@ -43,6 +43,7 @@ export default function(data){
         .append('path')
         .attr('class',classname)
         .on('mouseover',function(d,i){
+            console.log(d);
           if (d.data.value!=="NA"){
               eduPie.chart
               .append('foreignObject')
