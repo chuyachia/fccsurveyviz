@@ -20,13 +20,17 @@ export default function(data){
     ageHist.updateBars = function(){
       var bars = this.chart.selectAll('.age-bar')
       .data(this.bins);
-       bars.exit()
-         .remove(); 
-       bars.enter()
-        .append('g')
-        .attr('class','age-bar')
-        .on('mouseover',function(d){
-            d3.select(this)
+      
+      bars.enter()
+      .append('rect')
+      .attr('class','age-bar')
+      .attr("x", (d) => this.xscale(d.x0))
+      .attr('width',(d)=> this.xscale(d.x1)-this.xscale(d.x0)-1)
+      .attr("y",()=> this.innerHeight())
+      .attr('height',0)
+      .style('fill','2171b5')
+      .on('mouseover',(d)=>{
+            this.chart
             .append('text')
             .attr('class','age-text')
             .attr('x',()=>this.innerWidth())
@@ -36,27 +40,22 @@ export default function(data){
         .on('mouseout',function(){
             d3.selectAll('.age-text')
             .remove();
-        });
+      })
+      .transition()
+      .duration(3000)
+      .attr("y",(d)=> this.yscale(d.length))
+      .attr('height',(d)=>this.innerHeight()-this.yscale(d.length))
+      .style('fill','2171b5');
       
-      var rect = this.chart.selectAll('rect')
-        .data(this.bins);
- 
-       rect.exit()
-         .remove(); 
+       bars
+      .transition()
+      .duration(3000)
+      .attr("y",(d)=> this.yscale(d.length))
+      .attr('height',(d)=>this.innerHeight()-this.yscale(d.length))
+      .style('fill','2171b5');
       
-       rect.enter()
-        .append('rect')
-        .style('fill','2171b5')
-        .attr("x", (d) => this.xscale(d.x0))
-        .attr('width',(d)=> this.xscale(d.x1)-this.xscale(d.x0)-1)
-        .attr("y",()=> this.innerHeight())
-        .attr('height',0);
-
-       rect.transition()
-        .duration(1000)
-        .attr("y",(d)=> this.yscale(d.length))
-        .attr('height',(d)=>this.innerHeight()-this.yscale(d.length));
-      };
+      bars.exit().remove();
+    };
     
     
     ageHist.xscale = d3.scaleLinear()
@@ -71,34 +70,6 @@ export default function(data){
       .range([ageHist.innerHeight(),0]);
     
     ageHist.createChart();
-    ageHist.chart.selectAll('.age-bar')
-      .data(ageHist.bins)
-      .enter()
-      .append('g')
-      .attr('class','age-bar')
-      .on('mouseover',function(d){
-          d3.select(this)
-          .append('text')
-          .attr('class','age-text')
-          .attr('x',ageHist.innerWidth())
-          .attr('text-anchor','end')
-          .text(d.length+" coders aged between "+d.x0+" and "+d.x1);
-      })
-      .on('mouseout',function(){
-          d3.selectAll('.age-text')
-          .remove();
-      })
-      .append('rect')
-      .style('fill','2171b5')
-      .attr("x", function(d){return ageHist.xscale(d.x0)})
-      .attr('width',function(d){return ageHist.xscale(d.x1)-ageHist.xscale(d.x0)-1})
-      .attr("y",ageHist.innerHeight())
-      .attr('height',0)
-      .transition()
-      .duration(3000)
-      .attr("y",function(d){return ageHist.yscale(d.length)})
-      .attr('height',function(d){return ageHist.innerHeight()-ageHist.yscale(d.length)});   
-
     
     d3.select('figure')
     .append('select')
@@ -133,6 +104,8 @@ export default function(data){
     .attr('x',0-ageHist.innerHeight()/2)
     .attr('y', 0-40)
     .attr('text-anchor','middle');
+    
+    ageHist.updateBars();
     
      d3.select('#'+ageHist.id+' .loader').remove();
     

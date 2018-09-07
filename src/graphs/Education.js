@@ -43,7 +43,6 @@ export default function(data){
         .append('path')
         .attr('class',classname)
         .on('mouseover',function(d,i){
-            console.log(d);
           if (d.data.value!=="NA"){
               eduPie.chart
               .append('foreignObject')
