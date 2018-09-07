@@ -43,6 +43,8 @@ export default function(data){
         .append('path')
         .attr('class',classname)
         .on('mouseover',function(d,i){
+            d3.select(this)
+            .attr('opacity','0.8');
           if (d.data.value!=="NA"){
               eduPie.chart
               .append('foreignObject')
@@ -61,6 +63,8 @@ export default function(data){
           }
         })
         .on('mouseout',function(){
+          d3.select(this)
+          .attr('opacity','1');
           d3.selectAll('.edu-text').remove();
         })
         .attr('d',arc)

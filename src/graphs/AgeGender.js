@@ -2,8 +2,7 @@ import Graph from '../components/Graph';
 import * as d3 from "d3";
 
 export default function(data){
-    var ageData = data;
-    var ageHist = Object.assign({},Graph,{rawdata:ageData,data:ageData,title:"Demography",id:"age-gender"});
+    var ageHist = Object.assign({},Graph,{rawdata:data,data:data,title:"Demography",id:"age-gender"});
     
     ageHist.filterData = function(criteria){
       if (criteria =='female'||criteria =='male'){
@@ -29,15 +28,20 @@ export default function(data){
       .attr("y",()=> this.innerHeight())
       .attr('height',0)
       .style('fill','2171b5')
-      .on('mouseover',(d)=>{
-            this.chart
+      .on('mouseover',function(d){
+            d3.select(this)
+            .attr('opacity','0.8');
+        
+            ageHist.chart
             .append('text')
             .attr('class','age-text')
-            .attr('x',()=>this.innerWidth())
+            .attr('x',()=>ageHist.innerWidth())
             .attr('text-anchor','end')
             .text(d.length+" coders aged between "+d.x0+" and "+d.x1);
         })
         .on('mouseout',function(){
+            d3.select(this)
+            .attr('opacity','1')
             d3.selectAll('.age-text')
             .remove();
       })

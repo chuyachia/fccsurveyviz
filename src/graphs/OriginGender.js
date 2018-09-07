@@ -4,7 +4,7 @@ import palette from 'google-palette';
 import * as d3 from "d3";
 
 export default function(data){
-    var sequenceColors=palette('cb-Blues',4);
+    var sequenceColors=palette(['cb-Blues'],6).slice(2,6);
     var categoryColors = ['rgb(116, 196, 118)','rgb(107, 174, 214)','rgb(253, 141, 60)'];
 
     var countryData = data;
@@ -50,6 +50,8 @@ export default function(data){
       .attr('class','country')
       .attr('d', Map.path)
       .on('mouseover',function(d){
+        d3.select(this)
+          .attr('opacity','0.8');
         Map.chart
         .append('text')
         .text((d.female+d.male+d.other)+" coder(s) in " + d.properties.name)
@@ -88,12 +90,14 @@ export default function(data){
         }
       })
       .on('mouseout',function(){
+        d3.select(this)
+        .attr('opacity','1');
         d3.selectAll('.map-text').remove();
         d3.selectAll('.pie').remove();
       })
       .style('fill','grey')
       .transition()
-      .duration(3000)
+      .delay(function(d,i){return i*15})
       .style('fill', function(d) { return Map.color(d.female+d.male+d.other)});
 
       var legend = Map.chart.selectAll('.legend')
