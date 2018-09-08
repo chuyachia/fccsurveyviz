@@ -30,6 +30,7 @@ header {
   height: 120px;
   -webkit-animation: spin 2s linear infinite;
   animation: spin 2s linear infinite;
+  margin:auto;
 }
 
 @-webkit-keyframes spin {
@@ -64,13 +65,25 @@ h2:before {
 }
 
 figure {
+  height:100%;
   display:flex;
   flex-flow:row wrap;
   align-items:flex-start;
   justify-content:center;
 }
+
 svg {
   flex:0 0 auto;
+  height:100%;
+  width:100%;
+}
+
+@media (min-width: 768px) {
+  svg {
+    flex:0 0 auto;
+    height:100%;
+    width:60%;
+  } 
 }
 
 text{

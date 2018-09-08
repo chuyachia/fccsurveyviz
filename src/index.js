@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     select('.loaderwrap').remove();
     AgeGender(ageData);
 
-    while (document.body.scrollHeight<= document.body.offsetHeight) {
+    /*while (document.body.scrollHeight<= document.body.offsetHeight) {
       scrollPages[scrollCount].func(scrollPages[scrollCount].data);
       scrollCount+=1;
       if (scrollCount>=scrollPages.length) break;
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
       scrollPages[scrollCount].func(scrollPages[scrollCount].data);
       scrollCount+=1;
     }
-  };
+  };*/
 
   })
   .catch(function(err){
