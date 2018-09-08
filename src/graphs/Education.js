@@ -5,6 +5,7 @@ import * as d3 from "d3";
 
 
 export default function(data){
+    var zoomed = false;
     var eduPie = Object.assign({},Graph,Pie,{data:{degree:data.degree,major:data.major},h:600,radius:180,id:'education',title:'Educational background'});
     var totalCoders = eduPie.data.major.map(function(d){return d.count}).reduce(function(a,b){return a+b});
     eduPie.data.initmajor = eduPie.data.major.map(function(d,i){return i==0?Object.assign({},d,{count:totalCoders}):Object.assign({},d,{count:0})});
@@ -15,9 +16,9 @@ export default function(data){
     var degreeCats = eduPie.data.degree.map(function(d){return d.value});
     var categoryColors1 = palette('tol-dv',degreeCats.length);
     eduPie.pie = eduPie.createPie(function(d){return d.count});
-    for(var k in eduPie.data){
+    /*for(var k in eduPie.data){
         eduPie.data[k] = eduPie.pie(eduPie.data[k]);
-    }
+    }*/
 
     eduPie.createChart();
     eduPie.chart.attr('transform','translate('+eduPie.w/2+','+eduPie.h/2+')');
@@ -29,7 +30,7 @@ export default function(data){
         var colorscheme = eduPie.createColor(category,colors,classname);
     
         eduPie.chart.selectAll(classname)
-        .data(data)
+        .data(eduPie.pie(data))
         .enter()
         .append('path')
         .attr('class',classname)
@@ -43,6 +44,7 @@ export default function(data){
     };
     
     eduPie.updatePie  = function(classname,data,outerradius,innerradius){
+        data = eduPie.pie(data);
         var arc = eduPie.createArc(outerradius,innerradius,classname);        
         function arcTween() {
             return function(d,i) {
@@ -68,7 +70,7 @@ export default function(data){
                   .append('foreignObject')
                   .attr('width',eduPie.radius)
                   .attr('height',eduPie.radius)
-                  .attr('transform','translate('+(-eduPie.radius/2)+','+(-eduPie.radius/3)+')')
+                  .attr('transform','translate('+(-eduPie.radius/2)+','+(-eduPie.radius/2.5)+')')
                   .attr('class','edu-text')
                   .append('xhtml:p')
                   .text(function(){
@@ -84,6 +86,26 @@ export default function(data){
               d3.select(this)
               .attr('opacity','1');
               d3.selectAll('.edu-text').remove();
+            })
+            .on('click',function(d){
+                if(!d.data.degree){
+                    if (!zoomed) {
+                        var majordata =  eduPie.data.major.map(function(a){
+                            return a.degree==d.data.value?a:Object.assign({},a,{count:0});
+                        });
+        
+                        var degreedata = eduPie.data.degree.map(function(a){
+                            return a.value ==d.data.value?a:Object.assign({},a,{count:0});
+                        });
+                        eduPie.updatePie('layer1',degreedata,eduPie.radius,eduPie.radius/2);
+                        eduPie.updatePie('layer2',majordata,eduPie.radius*1.5,eduPie.radius);
+                        zoomed =!zoomed;
+                    } else {
+                        eduPie.updatePie('layer1',eduPie.data.degree,eduPie.radius,eduPie.radius/2);
+                        eduPie.updatePie('layer2',eduPie.data.major,eduPie.radius*1.5,eduPie.radius); 
+                        zoomed =!zoomed;
+                    }
+                }
             });
         });
         

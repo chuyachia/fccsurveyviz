@@ -78,3 +78,7 @@ select {
     text-align:center;
 }
 
+.layer1 {
+  cursor:pointer;
+}
+

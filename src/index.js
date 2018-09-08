@@ -67,17 +67,29 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
         if (other>0)
         degreetmp.push({value:'Other Fields',count:other, degree:degree,degreetotal:degreetotal});
-        degreetmp.sort(function(a,b){return b.count-a.count});
+        degreetmp.sort(function(a,b){
+          if(a.value=='NA'){
+            return 1;
+          } else {
+            if (b.count>a.count){
+              return 1;
+            } else if (b.count<a.count){
+              return -1;
+            } else {
+              return 0;
+            }
+          }
+          });
         educationData.major.push.apply(educationData.major,degreetmp);
       }
     }
     var scrollCount = 0;
     var scrollPages = [{func:OriginGender,data:countryData},{func:Education,data:educationData}];
 
-    // build graph
+
     select('.loaderwrap').remove();
     AgeGender(ageData);
-    
+
     while (document.body.scrollHeight<= document.body.offsetHeight) {
       scrollPages[scrollCount].func(scrollPages[scrollCount].data);
       scrollCount+=1;
