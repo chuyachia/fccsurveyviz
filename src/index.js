@@ -59,11 +59,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
         var other = 0;
         var degreetmp =[];
         for (var major in educationTmp[degree]){
-          if (educationTmp[degree][major]>=degreetotal/60) {
+          //if (educationTmp[degree][major]>=degreetotal/60) {
             degreetmp.push({value: major, count:educationTmp[degree][major],degree:degree,degreetotal:degreetotal});
-          } else {
-            other+=educationTmp[degree][major];
-          }
+          //} else {
+          //  other+=educationTmp[degree][major];
+          //}
         }
         if (other>0)
         degreetmp.push({value:'Other Fields',count:other, degree:degree,degreetotal:degreetotal});
@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     // build graph
     select('.loaderwrap').remove();
     AgeGender(ageData);
-
+    
     while (document.body.scrollHeight<= document.body.offsetHeight) {
       scrollPages[scrollCount].func(scrollPages[scrollCount].data);
       scrollCount+=1;

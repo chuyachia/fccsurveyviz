@@ -23,69 +23,75 @@ export default function(data){
     eduPie.chart.attr('transform','translate('+eduPie.w/2+','+eduPie.h/2+')');
 
     
-    eduPie.drawPie = function(initdata,realdata,category,classname,colors,outerradius,innerradius){
-        
-        function arcTween() {
-            return function(d,i) {
-                var interpolate = d3.interpolate(d, realdata[i]);
-                return function(t) {
-                    return arc(interpolate(t));
-                };
-            };
-        }
+    eduPie.drawPie = function(data,category,classname,colors,outerradius,innerradius){
 
         var arc = eduPie.createArc(outerradius,innerradius,classname);
         var colorscheme = eduPie.createColor(category,colors,classname);
     
         eduPie.chart.selectAll(classname)
-        .data(initdata)
+        .data(data)
         .enter()
         .append('path')
         .attr('class',classname)
-        .on('mouseover',function(d,i){
-            d3.select(this)
-            .attr('opacity','0.8');
-          if (d.data.value!=="NA"){
-              eduPie.chart
-              .append('foreignObject')
-              .attr('width',eduPie.radius)
-              .attr('height',eduPie.radius)
-              .attr('transform','translate('+(-eduPie.radius/2)+','+(-eduPie.radius/3)+')')
-              .attr('class','edu-text')
-              .append('xhtml:p')
-              .text(function(){
-                  if (d.data.degree){
-                      return Math.round(realdata[i].data.count/d.data.degreetotal*100) + "% of coders with "+d.data.degree+" major in " +d.data.value;
-                  } else {
-                      return Math.round(realdata[i].data.count/totalCoders*100) + "% of coders have "+d.data.value;
-                  }
-              });
-          }
-        })
-        .on('mouseout',function(){
-          d3.select(this)
-          .attr('opacity','1');
-          d3.selectAll('.edu-text').remove();
-        })
         .attr('d',arc)
         .style('fill',function(d){
             if (d.data.value=="NA")
                 return 'ffffff';
             else
                 return colorscheme(d.data.value);
-         })
+         });
+    };
+    
+    eduPie.updatePie  = function(classname,data,outerradius,innerradius){
+        var arc = eduPie.createArc(outerradius,innerradius,classname);        
+        function arcTween() {
+            return function(d,i) {
+                var interpolate = d3.interpolate(d, data[i]);
+                for (var k in data[i]) d[k] = data[i][k]; 
+                return function(t) {
+                    t  = interpolate(t);
+                    return arc(t);
+                };
+            };
+        }
+        d3.selectAll('.'+classname)
         .transition()
         .duration(3000)
-        .attrTween("d", arcTween())
-        .style('fill',function(d){
-            if (d.data.value=="NA")
-                return 'ffffff';
-            else
-                return colorscheme(d.data.value);
-         });
-
+        .attrTween("d", arcTween(function(d){return d;}))
+        .each(function(d,i){
+            d3.select(this)
+            .on('mouseover',function(){
+                d3.select(this)
+                .attr('opacity','0.8');
+              if (d.data.value!=="NA"){
+                  eduPie.chart
+                  .append('foreignObject')
+                  .attr('width',eduPie.radius)
+                  .attr('height',eduPie.radius)
+                  .attr('transform','translate('+(-eduPie.radius/2)+','+(-eduPie.radius/3)+')')
+                  .attr('class','edu-text')
+                  .append('xhtml:p')
+                  .text(function(){
+                      if (d.data.degree){
+                          return (d.data.count/d.data.degreetotal*100).toFixed(2) + "% of coders with "+d.data.degree+" major in " +d.data.value;
+                      } else {
+                          return (d.data.count/totalCoders*100).toFixed(2) + "% of coders have "+d.data.value;
+                      }
+                  });
+              }
+            })
+            .on('mouseout',function(){
+              d3.select(this)
+              .attr('opacity','1');
+              d3.selectAll('.edu-text').remove();
+            });
+        });
+        
     };
-    eduPie.drawPie(eduPie.data.initdegree,eduPie.data.degree,degreeCats,'layer1',categoryColors1,eduPie.radius,eduPie.radius/2);
-    eduPie.drawPie(eduPie.data.initmajor,eduPie.data.major,majorCats,'layer2',categoryColors2,eduPie.radius*1.5,eduPie.radius);
+    
+    eduPie.drawPie(eduPie.data.initdegree,degreeCats,'layer1',categoryColors1,eduPie.radius,eduPie.radius/2);
+    eduPie.updatePie('layer1',eduPie.data.degree,eduPie.radius,eduPie.radius/2);
+    eduPie.drawPie(eduPie.data.initmajor,majorCats,'layer2',categoryColors2,eduPie.radius*1.5,eduPie.radius);
+    eduPie.updatePie('layer2',eduPie.data.major,eduPie.radius*1.5,eduPie.radius);
     d3.select('#'+eduPie.id+' .loader').remove();
 }
