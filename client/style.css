@@ -3,9 +3,11 @@ html {
 }
 body {
   font-family: 'Lato';
+  color:#22231E;
   min-height:100%;
   margin:0;
   position:relative;
+  background-color:#F4F4E2;
 }
 
 
@@ -21,7 +23,7 @@ header {
 
 }
 .loader {
-  border: 16px solid #f3f3f3;
+  border: 16px solid #B5ABA1;
   border-radius: 50%;
   border-top: 16px solid #2171b5;
   width: 120px;
@@ -54,12 +56,13 @@ h2:before, h2:after {
     width: 50%;
     height: 1px;
     content: '';
-    border-bottom: 2px dotted black;
+    border-bottom: 2px dotted #22231E;
 }
 h2:before {
     margin-left: -50%;
     text-align: right;
 }
+
 figure {
   display:flex;
   flex-flow:row wrap;
@@ -69,8 +72,21 @@ figure {
 svg {
   flex:0 0 auto;
 }
+
+text{
+  fill:#22231E;
+}
 select {
   text-transform: capitalize ;
+  color:#22231E;
+  background-color:#F4F4E2;
+  border-top:none;
+  border-left:none;
+  border-right:none;
+  border-bottom:2px solid #22231E;
+}
+select:focus {
+  outline:none;
 }
 
 .edu-text p {

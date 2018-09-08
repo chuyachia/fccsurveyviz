@@ -56,18 +56,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
       if (degree !=="NA"){
         var degreetotal = Object.values(educationTmp[degree]).reduce(function(a,b){return a+b});
         educationData.degree.push({value:degree,count:degreetotal});
-        var other = 0;
-        var degreetmp =[];
+        var majortmp =[];
         for (var major in educationTmp[degree]){
-          //if (educationTmp[degree][major]>=degreetotal/60) {
-            degreetmp.push({value: major, count:educationTmp[degree][major],degree:degree,degreetotal:degreetotal});
-          //} else {
-          //  other+=educationTmp[degree][major];
-          //}
+            majortmp.push({value: major, count:educationTmp[degree][major],belongdegree:degree,degreetotal:degreetotal});
         }
-        if (other>0)
-        degreetmp.push({value:'Other Fields',count:other, degree:degree,degreetotal:degreetotal});
-        degreetmp.sort(function(a,b){
+        majortmp.sort(function(a,b){
           if(a.value=='NA'){
             return 1;
           } else {
@@ -80,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             }
           }
           });
-        educationData.major.push.apply(educationData.major,degreetmp);
+        educationData.major.push.apply(educationData.major,majortmp);
       }
     }
     var scrollCount = 0;

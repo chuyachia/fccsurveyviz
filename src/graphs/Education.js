@@ -8,22 +8,16 @@ export default function(data){
     var zoomed = false;
     var eduPie = Object.assign({},Graph,Pie,{data:{degree:data.degree,major:data.major},h:600,radius:180,id:'education',title:'Educational background'});
     var totalCoders = eduPie.data.major.map(function(d){return d.count}).reduce(function(a,b){return a+b});
-    eduPie.data.initmajor = eduPie.data.major.map(function(d,i){return i==0?Object.assign({},d,{count:totalCoders}):Object.assign({},d,{count:0})});
-    eduPie.data.initdegree = eduPie.data.degree.map(function(d,i){return i==0?Object.assign({},d,{count:totalCoders}):Object.assign({},d,{count:0})});
+    var degreeCats = eduPie.data.degree.map(function(d){return d.value});
+    var categoryColors1 = palette('tol-dv',degreeCats.length);    
     var majorCats = eduPie.data.major.map(function(d){return d.value});
     majorCats = majorCats.filter(function(d,i){return majorCats.indexOf(d)==i});
     var categoryColors2 = palette('tol-dv',majorCats.length);
-    var degreeCats = eduPie.data.degree.map(function(d){return d.value});
-    var categoryColors1 = palette('tol-dv',degreeCats.length);
     eduPie.pie = eduPie.createPie(function(d){return d.count});
-    /*for(var k in eduPie.data){
-        eduPie.data[k] = eduPie.pie(eduPie.data[k]);
-    }*/
 
-    eduPie.createChart();
-    eduPie.chart.attr('transform','translate('+eduPie.w/2+','+eduPie.h/2+')');
-
-    
+    eduPie.filterData = function(data,criteria,target){
+        return data.map(function(d){return d[target]==criteria?d:Object.assign({},d,{count:0})});
+    };
     eduPie.drawPie = function(data,category,classname,colors,outerradius,innerradius){
 
         var arc = eduPie.createArc(outerradius,innerradius,classname);
@@ -37,7 +31,7 @@ export default function(data){
         .attr('d',arc)
         .style('fill',function(d){
             if (d.data.value=="NA")
-                return 'ffffff';
+                return 'F4F4E2';
             else
                 return colorscheme(d.data.value);
          });
@@ -74,8 +68,8 @@ export default function(data){
                   .attr('class','edu-text')
                   .append('xhtml:p')
                   .text(function(){
-                      if (d.data.degree){
-                          return (d.data.count/d.data.degreetotal*100).toFixed(2) + "% of coders with "+d.data.degree+" major in " +d.data.value;
+                      if (d.data.belongdegree){
+                          return (d.data.count/d.data.degreetotal*100).toFixed(2) + "% of coders with "+d.data.belongdegree+" major in " +d.data.value;
                       } else {
                           return (d.data.count/totalCoders*100).toFixed(2) + "% of coders have "+d.data.value;
                       }
@@ -88,15 +82,10 @@ export default function(data){
               d3.selectAll('.edu-text').remove();
             })
             .on('click',function(d){
-                if(!d.data.degree){
+                if(!d.data.belongdegree){
                     if (!zoomed) {
-                        var majordata =  eduPie.data.major.map(function(a){
-                            return a.degree==d.data.value?a:Object.assign({},a,{count:0});
-                        });
-        
-                        var degreedata = eduPie.data.degree.map(function(a){
-                            return a.value ==d.data.value?a:Object.assign({},a,{count:0});
-                        });
+                        var majordata =  eduPie.filterData(eduPie.data.major,d.data.value,'belongdegree');
+                        var degreedata =  eduPie.filterData(eduPie.data.degree,d.data.value,'value');
                         eduPie.updatePie('layer1',degreedata,eduPie.radius,eduPie.radius/2);
                         eduPie.updatePie('layer2',majordata,eduPie.radius*1.5,eduPie.radius);
                         zoomed =!zoomed;
@@ -111,9 +100,12 @@ export default function(data){
         
     };
     
-    eduPie.drawPie(eduPie.data.initdegree,degreeCats,'layer1',categoryColors1,eduPie.radius,eduPie.radius/2);
+
+    eduPie.createChart();
+    eduPie.chart.attr('transform','translate('+eduPie.w/2+','+eduPie.h/2+')');
+    eduPie.drawPie(eduPie.filterData(eduPie.data.degree,null,'value'),degreeCats,'layer1',categoryColors1,eduPie.radius,eduPie.radius/2);
     eduPie.updatePie('layer1',eduPie.data.degree,eduPie.radius,eduPie.radius/2);
-    eduPie.drawPie(eduPie.data.initmajor,majorCats,'layer2',categoryColors2,eduPie.radius*1.5,eduPie.radius);
+    eduPie.drawPie(eduPie.filterData(eduPie.data.major,null,'value'),majorCats,'layer2',categoryColors2,eduPie.radius*1.5,eduPie.radius);
     eduPie.updatePie('layer2',eduPie.data.major,eduPie.radius*1.5,eduPie.radius);
     d3.select('#'+eduPie.id+' .loader').remove();
 }

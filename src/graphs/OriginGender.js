@@ -4,15 +4,14 @@ import palette from 'google-palette';
 import * as d3 from "d3";
 
 export default function(data){
+    var Map = Object.assign({},Graph,Pie, {data:data,w:1000,h:500,title:"Country",radius:50,id:'origin-gender'});
+
     var sequenceColors=palette(['cb-Blues'],6).slice(2,6);
     var categoryColors = ['rgb(116, 196, 118)','rgb(107, 174, 214)','rgb(253, 141, 60)'];
-
-    var countryData = data;
-    var Map = Object.assign({},Graph,Pie, {data:countryData,w:1000,h:400,title:"Country",radius:50,id:'origin-gender'});
     
     Map.projection = d3.geoMercator()
-    .scale(Map.innerWidth() / 2 / Math.PI)
-    .translate([Map.innerWidth() / 2, Map.innerHeight() /2]);
+    .scale(Map.innerWidth() /2/ Math.PI)
+    .translate([Map.innerWidth() /2, Map.innerHeight() /2]);
 
     Map.path = d3.geoPath()
       .projection(Map.projection);

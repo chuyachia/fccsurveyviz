@@ -41,7 +41,7 @@ export default function(data){
         })
         .on('mouseout',function(){
             d3.select(this)
-            .attr('opacity','1')
+            .attr('opacity','1');
             d3.selectAll('.age-text')
             .remove();
       })
