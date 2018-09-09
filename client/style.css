@@ -72,6 +72,7 @@ figure {
   flex-flow:row wrap;
   align-items:flex-start;
   justify-content:center;
+  height:300px;
 }
 
 
@@ -110,6 +111,13 @@ select:focus {
 
 
 @media (min-width: 576px) {
+  figure {
+    display:flex;
+    flex-flow:row wrap;
+    align-items:flex-start;
+    justify-content:center;
+    height:400px;
+}
   svg {
     flex:0 0 auto;
     height:100%;
@@ -124,6 +132,13 @@ select:focus {
 }
 
 @media (min-width: 768px) {
+  figure {
+    display:flex;
+    flex-flow:row wrap;
+    align-items:flex-start;
+    justify-content:center;
+    height:500px;
+  }
   svg {
     flex:0 0 auto;
     height:100%;

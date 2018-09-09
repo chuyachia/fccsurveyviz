@@ -4,7 +4,7 @@ import palette from 'google-palette';
 import * as d3 from "d3";
 
 export default function(data,resizes){
-    var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",radius:50,margin:{top:20,left:20,bottom:20,right:20},id:'origin-gender'});
+    var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",margin:{top:20,left:20,bottom:20,right:20},id:'origin-gender'});
     Map.createChart();
     return d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
     .then(function(geojson) {
@@ -21,7 +21,7 @@ export default function(data,resizes){
         }});
 
       
-      Map.arc = Map.createArc(Map.radius);
+      
       Map.pie = Map.createPie(function(d) { return d.count; });
       
       Map.buildPalette = function(){
@@ -40,6 +40,8 @@ export default function(data,resizes){
       Map.calculateScale= function(){
         this.width = this.innerWidth();
         this.height = this.innerHeight();
+        this.radius = this.width/9;
+        this.arc = this.createArc(this.radius);
         this.projection = d3.geoMercator()
         .scale(this.width /1.8/ Math.PI)
         .translate([this.width/2, this.height/2]);      
@@ -82,7 +84,7 @@ export default function(data,resizes){
   
             var legend = pie.append('g')
             .attr('transform',function(d,i){
-                return 'translate('+(-50+i*60)+','+(-Map.radius-10)+')';
+                return 'translate('+(-Map.radius+i*60)+','+(-Map.radius-10)+')';
             });
             legend.append('text')
             .text(function(d){return d.data.gender})

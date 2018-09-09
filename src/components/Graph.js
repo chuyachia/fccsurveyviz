@@ -3,7 +3,7 @@ import {select} from 'd3';
 export default {
   containerHeight:'500px',
   chart: null,
-  margin : {top: 50, right: 50, bottom: 50, left: 50},
+  margin : {top: 60, right: 60, bottom: 60, left: 60},
   createChart: function(){
     var element = select('main')
     .append('article').attr('id',this.id);
@@ -18,7 +18,7 @@ export default {
     .attr('class','loader');
     
     this.chart =element.append('figure')
-    .style('height',this.containerHeight)
+    //.style('height',this.containerHeight)
     .append('svg')
     .append('g')
     .attr('transform','translate('+this.margin.left+','+this.margin.top+')');

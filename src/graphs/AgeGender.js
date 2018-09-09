@@ -19,6 +19,8 @@ export default function(data,resizes){
         .attr("transform", 'rotate(-90)')
         .text('Count')
         .attr('text-anchor','middle');
+    
+    var yscaleMax;
         
     ageHist.filterData = function(criteria){
       if (criteria =='female'||criteria =='male'){
@@ -81,23 +83,28 @@ export default function(data,resizes){
       this.chart.selectAll('.age-bar')
       .data(this.bins)
       .attr("x", (d) => this.xscale(d.x0))
-      .attr('width',(d)=> this.xscale(d.x1)-this.xscale(d.x0)-1);
+      .attr('width',(d)=> this.xscale(d.x1)-this.xscale(d.x0)-1)
+      .attr("y",(d)=> this.yscale(d.length))
+      .attr('height',(d)=>this.height-this.yscale(d.length));
     };
     
     ageHist.calculateScale = function() {
       this.width = this.innerWidth();
       this.height = this.innerHeight();
       this.xscale = d3.scaleLinear()
-        .domain([d3.min(ageHist.data,function(d){return d.age}),d3.max(ageHist.data,function(d){return d.age})])
+        .domain([d3.min(ageHist.data,function(d){return d.age}),d3.max(ageHist.rawdata,function(d){return d.age})])
         .range([0,this.width]);
       this.hist = d3.histogram()
         .value(function(d){return d.age})
         .domain(ageHist.xscale.domain());
       this.bins = this.hist(this.data);
       this.yscale = d3.scaleLinear()
-        .domain([0,d3.max(ageHist.bins,function(d){return d.length})])
+        .domain([0,yscaleMax||d3.max(ageHist.bins,function(d){return d.length})])
         .range([this.height,0]);
+        
+      if (!yscaleMax) yscaleMax = d3.max(ageHist.bins,function(d){return d.length});
     };
+    
     
     ageHist.drawAxes= function(){  
        this.chart.select('.xaxis')
@@ -131,6 +138,8 @@ export default function(data,resizes){
     .on('change',function(){
       var selected = d3.select('select').property('value');
       ageHist.filterData(selected);
+      //ageHist.calculateScale();
+      //ageHist.drawAxes();  
       ageHist.convertBins();
       ageHist.drawBars();
     })
