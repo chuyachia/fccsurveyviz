@@ -5,6 +5,7 @@ import * as d3 from "d3";
 
 export default function(data,resizes){
     var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",radius:50,margin:{top:20,left:20,bottom:20,right:20},id:'origin-gender'});
+    Map.createChart();
     return d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
     .then(function(geojson) {
       
@@ -18,10 +19,8 @@ export default function(data,resizes){
           d.male=0;
           d.other = 0; 
         }});
+
       
-      
-      
-      Map.createChart();
       Map.arc = Map.createArc(Map.radius);
       Map.pie = Map.createPie(function(d) { return d.count; });
       
@@ -35,14 +34,15 @@ export default function(data,resizes){
         this.mapColor = d3.scaleThreshold()
           .domain(this.mapPalette.map(function(e){return e.value}))
           .range(this.mapPalette.map(function(e){return e.color}));
-          
-        this.pieColor = this.createColor(this.piePalette.map(function(e){return e.value}),this.piePalette.map(function(e){return e.color}))
+        this.pieColor = this.createColor(this.piePalette.map(function(e){return e.value}),this.piePalette.map(function(e){return e.color}));
       };
   
-      Map.calculateProj = function(){
+      Map.calculateScale= function(){
+        this.width = this.innerWidth();
+        this.height = this.innerHeight();
         this.projection = d3.geoMercator()
-        .scale(this.innerWidth() /1.8/ Math.PI)
-        .translate([this.innerWidth()/2, this.innerHeight()/2]);      
+        .scale(this.width /1.8/ Math.PI)
+        .translate([this.width/2, this.height/2]);      
         this.path = d3.geoPath()
           .projection(this.projection);
       };
@@ -53,7 +53,7 @@ export default function(data,resizes){
         .enter()
         .append('path')
         .attr('class','country')
-        .attr('d', Map.path)
+        .attr('d', this.path)
         .on('mouseover',function(d){
           d3.select(this)
             .attr('opacity','0.8');
@@ -63,7 +63,7 @@ export default function(data,resizes){
           .attr('class','map-text')
           .attr('text-anchor','left')
           .attr('x',Map.radius*2)
-          .attr('y',Map.innerHeight());
+          .attr('y',Map.height);
           
         if ((d.female+d.male+d.other)>0){
          var pie=  Map.chart
@@ -74,7 +74,7 @@ export default function(data,resizes){
             .enter()
             .append("g")
             .attr("class", "pie")
-            .attr('transform','translate('+Map.radius+','+(Map.innerHeight()-Map.radius)+')');
+            .attr('transform','translate('+Map.radius+','+(Map.height-Map.radius)+')');
             
             pie.append("path")
             .style('fill',function(d){return Map.pieColor(d.data.gender)})
@@ -109,17 +109,17 @@ export default function(data,resizes){
       
       Map.resizeMap = function(){
         this.chart.selectAll(".country")
-        .attr('d', Map.path);
+        .attr('d', this.path);
       };
 
       Map.drawLegend = function(){
-        var legend = Map.chart.selectAll('.legend')
-        .data(Map.mapPalette)
+        var legend = this.chart.selectAll('.legend')
+        .data(this.mapPalette)
         .enter()
         .append('g')
         .attr('class','legend')
         .attr('transform',function(d,i){
-              return 'translate('+(Map.innerWidth()-80)+','+(Map.innerHeight()/2+i*20)+')';
+              return 'translate('+(Map.width-80)+','+(Map.height/2+i*20)+')';
           });
         
         legend.append('text')
@@ -144,26 +144,25 @@ export default function(data,resizes){
           this.chart.selectAll('.legend')
           .data(this.mapPalette)
           .attr('transform',function(d,i){
-              return 'translate('+(Map.innerWidth()-80)+','+(Map.innerHeight()/2+i*20)+')';
+              return 'translate('+(Map.width-80)+','+(Map.height/2+i*20)+')';
           });
       };
       
       var draw = function(){
         Map.buildPalette();
-        Map.calculateProj();
+        Map.calculateScale();
         Map.drawMap();
         Map.drawLegend();
       };
       
       var resize = function(){
-        Map.calculateProj();
+        Map.calculateScale();
         Map.resizeMap();
         Map.resizeLegend();
       }
       
       draw();
       d3.select('#'+Map.id+' .loader').remove();
-      //d3.select(window).on('resize', resize);
       resizes.push(resize);
     })
     .catch(function(err){

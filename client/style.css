@@ -43,9 +43,6 @@ header {
   100% { transform: rotate(360deg); }
 }
 
-main {
-  height:100%;
-}
 h1, h2 {
   text-align:center;
 }
@@ -84,13 +81,6 @@ svg {
   width:100%;
 }
 
-@media (min-width: 768px) {
-  svg {
-    flex:0 0 auto;
-    height:100%;
-    width:60%;
-  } 
-}
 
 text{
   fill:#22231E;
@@ -111,9 +101,23 @@ select:focus {
 .edu-text p {
     padding:10px;
     text-align:center;
+    font-size:10px;
 }
 
 .layer1 {
   cursor:pointer;
 }
 
+
+@media (min-width: 768px) {
+  svg {
+    flex:0 0 auto;
+    height:100%;
+    width:60%;
+  } 
+  .edu-text p {
+    padding:10px;
+    text-align:center;
+    font-size:14px;
+  }
+}

@@ -34202,7 +34202,7 @@ Object.defineProperty(exports, "__esModule", {
 var _d = __webpack_require__(/*! d3 */ "./node_modules/d3/index.js");
 
 exports.default = {
-  height: '500px',
+  containerHeight: '500px',
   chart: null,
   margin: { top: 50, right: 50, bottom: 50, left: 50 },
   createChart: function createChart() {
@@ -34212,7 +34212,13 @@ exports.default = {
 
     element.append('div').attr('class', 'loader');
 
-    this.chart = element.append('figure').style('height', this.height).append('svg').append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
+    this.chart = element.append('figure').style('height', this.containerHeight).append('svg').append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
+  },
+  outerHeight: function outerHeight() {
+    return parseInt((0, _d.select)('#' + this.id + ' svg').style("height"));
+  },
+  outerWidth: function outerWidth() {
+    return parseInt((0, _d.select)('#' + this.id + ' svg').style("width"));
   },
   innerWidth: function innerWidth() {
     return parseInt((0, _d.select)('#' + this.id + ' svg').style("width")) - this.margin.left - this.margin.right;
@@ -34269,7 +34275,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-exports.default = function (data) {
+exports.default = function (data, resizes) {
   var ageHist = Object.assign({}, _Graph2.default, { rawdata: data, data: data, title: "Demography", id: "age-gender" });
   ageHist.createChart();
   ageHist.chart.append('g').attr('class', 'xaxis');
@@ -34303,12 +34309,12 @@ exports.default = function (data) {
     }).attr('width', function (d) {
       return _this.xscale(d.x1) - _this.xscale(d.x0) - 1;
     }).attr("y", function () {
-      return _this.innerHeight();
+      return _this.height;
     }).attr('height', 0).style('fill', '2171b5').on('mouseover', function (d) {
       d3.select(this).attr('opacity', '0.8');
 
       ageHist.chart.append('text').attr('class', 'age-text').attr('x', function () {
-        return ageHist.innerWidth();
+        return ageHist.width;
       }).attr('text-anchor', 'end').text(d.length + " coders aged between " + d.x0 + " and " + d.x1);
     }).on('mouseout', function () {
       d3.select(this).attr('opacity', '1');
@@ -34316,13 +34322,13 @@ exports.default = function (data) {
     }).transition().duration(3000).attr("y", function (d) {
       return _this.yscale(d.length);
     }).attr('height', function (d) {
-      return _this.innerHeight() - _this.yscale(d.length);
+      return _this.height - _this.yscale(d.length);
     }).style('fill', '2171b5');
 
     bars.transition().duration(3000).attr("y", function (d) {
       return _this.yscale(d.length);
     }).attr('height', function (d) {
-      return _this.innerHeight() - _this.yscale(d.length);
+      return _this.height - _this.yscale(d.length);
     }).style('fill', '2171b5');
 
     bars.exit().remove();
@@ -34339,28 +34345,27 @@ exports.default = function (data) {
   };
 
   ageHist.calculateScale = function () {
+    this.width = this.innerWidth();
+    this.height = this.innerHeight();
     this.xscale = d3.scaleLinear().domain([d3.min(ageHist.data, function (d) {
       return d.age;
     }), d3.max(ageHist.data, function (d) {
       return d.age;
-    })]).range([0, ageHist.innerWidth()]);
+    })]).range([0, this.width]);
     this.hist = d3.histogram().value(function (d) {
       return d.age;
     }).domain(ageHist.xscale.domain());
     this.bins = this.hist(this.data);
     this.yscale = d3.scaleLinear().domain([0, d3.max(ageHist.bins, function (d) {
       return d.length;
-    })]).range([ageHist.innerHeight(), 0]);
+    })]).range([this.height, 0]);
   };
 
   ageHist.drawAxes = function () {
-    this.chart.select('.xaxis').call(d3.axisBottom(ageHist.xscale)).attr('transform', 'translate(0,' + ageHist.innerHeight() + ')');
-
-    this.chart.select('.yaxis').call(d3.axisLeft(ageHist.yscale));
-
-    this.chart.select('.xaxis-text').attr('transform', 'translate(' + ageHist.innerWidth() / 2 + ',' + (ageHist.innerHeight() + 30) + ')');
-
-    this.chart.select('.yaxis-text').attr('x', 0 - ageHist.innerHeight() / 2).attr('y', 0 - 40);
+    this.chart.select('.xaxis').call(d3.axisBottom(this.xscale)).attr('transform', 'translate(0,' + this.height + ')');
+    this.chart.select('.yaxis').call(d3.axisLeft(this.yscale));
+    this.chart.select('.xaxis-text').attr('transform', 'translate(' + this.width / 2 + ',' + (this.height + 30) + ')');
+    this.chart.select('.yaxis-text').attr('x', 0 - this.height / 2).attr('y', 0 - 40);
   };
 
   var draw = function draw() {
@@ -34389,7 +34394,7 @@ exports.default = function (data) {
 
   d3.select('#' + ageHist.id + ' .loader').remove();
 
-  return resize;
+  resizes.push(resize);
 };
 
 var _Graph = __webpack_require__(/*! ../components/Graph */ "./src/components/Graph.js");
@@ -34420,10 +34425,10 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-exports.default = function (data) {
+exports.default = function (data, resizes) {
     var zoomed = false;
-    var eduPie = Object.assign({}, _Graph2.default, _Pie2.default, { data: { degree: data.degree, major: data.major }, height: '600px', id: 'education', title: 'Educational background' });
-    eduPie.radius = eduPie.innerWidth() / 2;
+    var eduPie = Object.assign({}, _Graph2.default, _Pie2.default, { data: { degree: data.degree, major: data.major }, margin: { top: 0, left: 0, bottom: 0, right: 0 }, id: 'education', title: 'Educational background' });
+    eduPie.createChart();
     var totalCoders = eduPie.data.major.map(function (d) {
         return d.count;
     }).reduce(function (a, b) {
@@ -34444,24 +34449,29 @@ exports.default = function (data) {
         return d.count;
     });
 
+    eduPie.calculateScale = function () {
+        this.chart.attr('transform', 'translate(' + this.outerWidth() / 2 + ',' + this.outerHeight() / 2 + ')');
+        this.radius = Math.min(this.innerWidth(), this.innerHeight()) / 3;
+    };
+
     eduPie.filterData = function (data, criteria, target) {
         return data.map(function (d) {
             return d[target] == criteria ? d : Object.assign({}, d, { count: 0 });
         });
     };
+
     eduPie.drawPie = function (data, category, classname, colors, outerradius, innerradius) {
+        var arc = eduPie.createArc(outerradius, innerradius);
+        var colorscheme = eduPie.createColor(category, colors);
 
-        var arc = eduPie.createArc(outerradius, innerradius, classname);
-        var colorscheme = eduPie.createColor(category, colors, classname);
-
-        eduPie.chart.selectAll(classname).data(eduPie.pie(data)).enter().append('path').attr('class', classname).attr('d', arc).style('fill', function (d) {
+        eduPie.chart.selectAll('.' + classname).data(eduPie.pie(data)).enter().append('path').attr('class', classname).attr('d', arc).style('fill', function (d) {
             if (d.data.value == "NA") return 'F4F4E2';else return colorscheme(d.data.value);
         });
     };
 
     eduPie.updatePie = function (classname, data, outerradius, innerradius) {
         data = eduPie.pie(data);
-        var arc = eduPie.createArc(outerradius, innerradius, classname);
+        var arc = eduPie.createArc(outerradius, innerradius);
         function arcTween() {
             return function (d, i) {
                 var interpolate = d3.interpolate(d, data[i]);
@@ -34508,13 +34518,35 @@ exports.default = function (data) {
         });
     };
 
-    eduPie.createChart();
-    eduPie.chart.attr('transform', 'translate(' + eduPie.w / 2 + ',' + eduPie.h / 2 + ')');
-    eduPie.drawPie(eduPie.filterData(eduPie.data.degree, null, 'value'), degreeCats, 'layer1', categoryColors1, eduPie.radius, eduPie.radius / 2);
-    eduPie.updatePie('layer1', eduPie.data.degree, eduPie.radius, eduPie.radius / 2);
-    eduPie.drawPie(eduPie.filterData(eduPie.data.major, null, 'value'), majorCats, 'layer2', categoryColors2, eduPie.radius * 1.5, eduPie.radius);
-    eduPie.updatePie('layer2', eduPie.data.major, eduPie.radius * 1.5, eduPie.radius);
+    eduPie.resizePie = function (classname) {
+        var outerradius, innerradius;
+        if (classname == 'layer1') {
+            outerradius = eduPie.radius;
+            innerradius = eduPie.radius / 2;
+        } else {
+            outerradius = eduPie.radius * 1.5;
+            innerradius = eduPie.radius;
+        }
+        var arc = eduPie.createArc(outerradius, innerradius);
+        this.chart.selectAll('.' + classname).attr('d', arc);
+    };
+
+    var draw = function draw() {
+        eduPie.calculateScale();
+        eduPie.drawPie(eduPie.filterData(eduPie.data.degree, null, 'value'), degreeCats, 'layer1', categoryColors1, eduPie.radius, eduPie.radius / 2);
+        eduPie.updatePie('layer1', eduPie.data.degree, eduPie.radius, eduPie.radius / 2);
+        eduPie.drawPie(eduPie.filterData(eduPie.data.major, null, 'value'), majorCats, 'layer2', categoryColors2, eduPie.radius * 1.5, eduPie.radius);
+        eduPie.updatePie('layer2', eduPie.data.major, eduPie.radius * 1.5, eduPie.radius);
+    };
+    var resize = function resize() {
+        eduPie.calculateScale();
+        eduPie.resizePie('layer1');
+        eduPie.resizePie('layer2');
+    };
+
+    draw();
     d3.select('#' + eduPie.id + ' .loader').remove();
+    resizes.push(resize);
 };
 
 var _Graph = __webpack_require__(/*! ../components/Graph */ "./src/components/Graph.js");
@@ -34555,6 +34587,7 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = function (data, resizes) {
   var Map = Object.assign({}, _Graph2.default, _Pie2.default, { data: data, title: "Country", radius: 50, margin: { top: 20, left: 20, bottom: 20, right: 20 }, id: 'origin-gender' });
+  Map.createChart();
   return d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645').then(function (geojson) {
 
     geojson.features.forEach(function (d) {
@@ -34569,7 +34602,6 @@ exports.default = function (data, resizes) {
       }
     });
 
-    Map.createChart();
     Map.arc = Map.createArc(Map.radius);
     Map.pie = Map.createPie(function (d) {
       return d.count;
@@ -34591,7 +34623,6 @@ exports.default = function (data, resizes) {
       })).range(this.mapPalette.map(function (e) {
         return e.color;
       }));
-
       this.pieColor = this.createColor(this.piePalette.map(function (e) {
         return e.value;
       }), this.piePalette.map(function (e) {
@@ -34599,18 +34630,20 @@ exports.default = function (data, resizes) {
       }));
     };
 
-    Map.calculateProj = function () {
-      this.projection = d3.geoMercator().scale(this.innerWidth() / 1.8 / Math.PI).translate([this.innerWidth() / 2, this.innerHeight() / 2]);
+    Map.calculateScale = function () {
+      this.width = this.innerWidth();
+      this.height = this.innerHeight();
+      this.projection = d3.geoMercator().scale(this.width / 1.8 / Math.PI).translate([this.width / 2, this.height / 2]);
       this.path = d3.geoPath().projection(this.projection);
     };
 
     Map.drawMap = function () {
-      this.chart.selectAll(".country").data(geojson.features).enter().append('path').attr('class', 'country').attr('d', Map.path).on('mouseover', function (d) {
+      this.chart.selectAll(".country").data(geojson.features).enter().append('path').attr('class', 'country').attr('d', this.path).on('mouseover', function (d) {
         d3.select(this).attr('opacity', '0.8');
-        Map.chart.append('text').text(d.female + d.male + d.other + " coder(s) in " + d.properties.name).attr('class', 'map-text').attr('text-anchor', 'left').attr('x', Map.radius * 2).attr('y', Map.innerHeight());
+        Map.chart.append('text').text(d.female + d.male + d.other + " coder(s) in " + d.properties.name).attr('class', 'map-text').attr('text-anchor', 'left').attr('x', Map.radius * 2).attr('y', Map.height);
 
         if (d.female + d.male + d.other > 0) {
-          var pie = Map.chart.selectAll(".pie").data(Map.pie([{ gender: Map.piePalette[0].value, count: d.female, color: Map.piePalette[0].color }, { gender: Map.piePalette[1].value, count: d.male, color: Map.piePalette[1].color }, { gender: Map.piePalette[2].value, count: d.other, color: Map.piePalette[2].color }])).enter().append("g").attr("class", "pie").attr('transform', 'translate(' + Map.radius + ',' + (Map.innerHeight() - Map.radius) + ')');
+          var pie = Map.chart.selectAll(".pie").data(Map.pie([{ gender: Map.piePalette[0].value, count: d.female, color: Map.piePalette[0].color }, { gender: Map.piePalette[1].value, count: d.male, color: Map.piePalette[1].color }, { gender: Map.piePalette[2].value, count: d.other, color: Map.piePalette[2].color }])).enter().append("g").attr("class", "pie").attr('transform', 'translate(' + Map.radius + ',' + (Map.height - Map.radius) + ')');
 
           pie.append("path").style('fill', function (d) {
             return Map.pieColor(d.data.gender);
@@ -34638,12 +34671,12 @@ exports.default = function (data, resizes) {
     };
 
     Map.resizeMap = function () {
-      this.chart.selectAll(".country").attr('d', Map.path);
+      this.chart.selectAll(".country").attr('d', this.path);
     };
 
     Map.drawLegend = function () {
-      var legend = Map.chart.selectAll('.legend').data(Map.mapPalette).enter().append('g').attr('class', 'legend').attr('transform', function (d, i) {
-        return 'translate(' + (Map.innerWidth() - 80) + ',' + (Map.innerHeight() / 2 + i * 20) + ')';
+      var legend = this.chart.selectAll('.legend').data(this.mapPalette).enter().append('g').attr('class', 'legend').attr('transform', function (d, i) {
+        return 'translate(' + (Map.width - 80) + ',' + (Map.height / 2 + i * 20) + ')';
       });
 
       legend.append('text').text(function (d, i) {
@@ -34657,26 +34690,25 @@ exports.default = function (data, resizes) {
 
     Map.resizeLegend = function () {
       this.chart.selectAll('.legend').data(this.mapPalette).attr('transform', function (d, i) {
-        return 'translate(' + (Map.innerWidth() - 80) + ',' + (Map.innerHeight() / 2 + i * 20) + ')';
+        return 'translate(' + (Map.width - 80) + ',' + (Map.height / 2 + i * 20) + ')';
       });
     };
 
     var draw = function draw() {
       Map.buildPalette();
-      Map.calculateProj();
+      Map.calculateScale();
       Map.drawMap();
       Map.drawLegend();
     };
 
     var resize = function resize() {
-      Map.calculateProj();
+      Map.calculateScale();
       Map.resizeMap();
       Map.resizeLegend();
     };
 
     draw();
     d3.select('#' + Map.id + ' .loader').remove();
-    //d3.select(window).on('resize', resize);
     resizes.push(resize);
   }).catch(function (err) {
     console.log(err);
@@ -34797,26 +34829,28 @@ document.addEventListener("DOMContentLoaded", function (event) {
     var scrollPages = [{ func: _OriginGender2.default, data: countryData }, { func: _Education2.default, data: educationData }];
     var resizes = [];
 
+    (0, _AgeGender2.default)(ageData, resizes);
     (0, _d.select)('.loaderwrap').remove();
-    resizes.push((0, _AgeGender2.default)(ageData));
-    (0, _OriginGender2.default)(countryData, resizes);
+
+    while (document.body.scrollHeight <= document.body.offsetHeight) {
+
+      scrollPages[scrollCount].func(scrollPages[scrollCount].data, resizes);
+      scrollCount += 1;
+      if (scrollCount >= scrollPages.length) break;
+    }
+
+    window.onscroll = function (ev) {
+      if (window.innerHeight + window.pageYOffset >= document.body.offsetHeight && scrollCount < scrollPages.length) {
+        scrollPages[scrollCount].func(scrollPages[scrollCount].data, resizes);
+        scrollCount += 1;
+      }
+    };
 
     (0, _d.select)(window).on('resize', function () {
       resizes.forEach(function (f) {
         f();
       });
     });
-    /*while (document.body.scrollHeight<= document.body.offsetHeight) {
-      scrollPages[scrollCount].func(scrollPages[scrollCount].data);
-      scrollCount+=1;
-      if (scrollCount>=scrollPages.length) break;
-    }
-     window.onscroll = function(ev) {
-    if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight&&scrollCount<scrollPages.length) {
-      scrollPages[scrollCount].func(scrollPages[scrollCount].data);
-      scrollCount+=1;
-    }
-    };*/
   }).catch(function (err) {
     console.log(err);
   });

@@ -4,10 +4,10 @@ import palette from 'google-palette';
 import * as d3 from "d3";
 
 
-export default function(data){
+export default function(data,resizes){
     var zoomed = false;
-    var eduPie = Object.assign({},Graph,Pie,{data:{degree:data.degree,major:data.major},height:'600px',id:'education',title:'Educational background'});
-    eduPie.radius = eduPie.innerWidth()/2;
+    var eduPie = Object.assign({},Graph,Pie,{data:{degree:data.degree,major:data.major},margin:{top:0,left:0,bottom:0,right:0},id:'education',title:'Educational background'});
+    eduPie.createChart();
     var totalCoders = eduPie.data.major.map(function(d){return d.count}).reduce(function(a,b){return a+b});
     var degreeCats = eduPie.data.degree.map(function(d){return d.value});
     var categoryColors1 = palette('tol-dv',degreeCats.length);    
@@ -16,15 +16,20 @@ export default function(data){
     var categoryColors2 = palette('tol-dv',majorCats.length);
     eduPie.pie = eduPie.createPie(function(d){return d.count});
 
+    eduPie.calculateScale = function(){
+        this.chart.attr('transform','translate('+this.outerWidth()/2+','+this.outerHeight()/2+')');
+        this.radius = Math.min(this.innerWidth(),this.innerHeight())/3;        
+    };
+    
     eduPie.filterData = function(data,criteria,target){
         return data.map(function(d){return d[target]==criteria?d:Object.assign({},d,{count:0})});
     };
-    eduPie.drawPie = function(data,category,classname,colors,outerradius,innerradius){
-
-        var arc = eduPie.createArc(outerradius,innerradius,classname);
-        var colorscheme = eduPie.createColor(category,colors,classname);
     
-        eduPie.chart.selectAll(classname)
+    eduPie.drawPie = function(data,category,classname,colors,outerradius,innerradius){
+        var arc = eduPie.createArc(outerradius,innerradius);
+        var colorscheme = eduPie.createColor(category,colors);
+    
+        eduPie.chart.selectAll('.'+classname)
         .data(eduPie.pie(data))
         .enter()
         .append('path')
@@ -40,7 +45,7 @@ export default function(data){
     
     eduPie.updatePie  = function(classname,data,outerradius,innerradius){
         data = eduPie.pie(data);
-        var arc = eduPie.createArc(outerradius,innerradius,classname);        
+        var arc = eduPie.createArc(outerradius,innerradius);        
         function arcTween() {
             return function(d,i) {
                 var interpolate = d3.interpolate(d, data[i]);
@@ -101,12 +106,35 @@ export default function(data){
         
     };
     
+    eduPie.resizePie = function(classname){
+        var outerradius,
+        innerradius;
+        if (classname == 'layer1'){
+            outerradius =  eduPie.radius;
+            innerradius = eduPie.radius/2;
+        } else {
+            outerradius =  eduPie.radius*1.5;
+            innerradius = eduPie.radius;
+        }
+        var arc = eduPie.createArc(outerradius,innerradius);
+        this.chart.selectAll('.'+classname)
+        .attr('d',arc);
+    };
+    
+    var draw = function(){
+        eduPie.calculateScale();
+        eduPie.drawPie(eduPie.filterData(eduPie.data.degree,null,'value'),degreeCats,'layer1',categoryColors1,eduPie.radius,eduPie.radius/2);
+        eduPie.updatePie('layer1',eduPie.data.degree,eduPie.radius,eduPie.radius/2);
+        eduPie.drawPie(eduPie.filterData(eduPie.data.major,null,'value'),majorCats,'layer2',categoryColors2,eduPie.radius*1.5,eduPie.radius);
+        eduPie.updatePie('layer2',eduPie.data.major,eduPie.radius*1.5,eduPie.radius);        
+    };
+    var resize = function(){
+        eduPie.calculateScale();
+        eduPie.resizePie('layer1');
+        eduPie.resizePie('layer2');
+    }; 
 
-    eduPie.createChart();
-    eduPie.chart.attr('transform','translate('+eduPie.w/2+','+eduPie.h/2+')');
-    eduPie.drawPie(eduPie.filterData(eduPie.data.degree,null,'value'),degreeCats,'layer1',categoryColors1,eduPie.radius,eduPie.radius/2);
-    eduPie.updatePie('layer1',eduPie.data.degree,eduPie.radius,eduPie.radius/2);
-    eduPie.drawPie(eduPie.filterData(eduPie.data.major,null,'value'),majorCats,'layer2',categoryColors2,eduPie.radius*1.5,eduPie.radius);
-    eduPie.updatePie('layer2',eduPie.data.major,eduPie.radius*1.5,eduPie.radius);
+    draw();
     d3.select('#'+eduPie.id+' .loader').remove();
+    resizes.push(resize);
 }

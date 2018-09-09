@@ -78,27 +78,29 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
     var scrollCount = 0;
     var scrollPages = [{func:OriginGender,data:countryData},{func:Education,data:educationData}];
-    var resizes = []
-
+    var resizes = [];
+    
+    AgeGender(ageData,resizes);
     select('.loaderwrap').remove();
-    resizes.push(AgeGender(ageData));
-    OriginGender(countryData,resizes);
+      
+    while (document.body.scrollHeight<= document.body.offsetHeight) {
 
-    select(window).on('resize', function(){
-      resizes.forEach(function(f){f();});
-    });
-    /*while (document.body.scrollHeight<= document.body.offsetHeight) {
-      scrollPages[scrollCount].func(scrollPages[scrollCount].data);
+      scrollPages[scrollCount].func(scrollPages[scrollCount].data,resizes);
       scrollCount+=1;
       if (scrollCount>=scrollPages.length) break;
     }
 
     window.onscroll = function(ev) {
-    if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight&&scrollCount<scrollPages.length) {
-      scrollPages[scrollCount].func(scrollPages[scrollCount].data);
-      scrollCount+=1;
-    }
-  };*/
+      if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight&&scrollCount<scrollPages.length) {
+        scrollPages[scrollCount].func(scrollPages[scrollCount].data,resizes);
+        scrollCount+=1;
+      }
+    };
+    
+    select(window).on('resize', function(){
+      resizes.forEach(function(f){f();});
+    });
+    
 
   })
   .catch(function(err){

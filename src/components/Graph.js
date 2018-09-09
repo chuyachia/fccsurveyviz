@@ -1,7 +1,7 @@
 import {select} from 'd3';
 
 export default {
-  height:'500px',
+  containerHeight:'500px',
   chart: null,
   margin : {top: 50, right: 50, bottom: 50, left: 50},
   createChart: function(){
@@ -18,10 +18,16 @@ export default {
     .attr('class','loader');
     
     this.chart =element.append('figure')
-    .style('height',this.height)
+    .style('height',this.containerHeight)
     .append('svg')
     .append('g')
     .attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+  },
+  outerHeight :function(){
+     return parseInt(select('#'+this.id+' svg').style("height"));
+  },
+  outerWidth: function(){
+    return parseInt(select('#'+this.id+' svg').style("width"));
   },
   innerWidth:function(){
     return parseInt(select('#'+this.id+' svg').style("width")) - this.margin.left-this.margin.right;

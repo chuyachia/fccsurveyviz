@@ -1,7 +1,7 @@
 import Graph from '../components/Graph';
 import * as d3 from "d3";
 
-export default function(data){
+export default function(data,resizes){
     var ageHist = Object.assign({},Graph,{rawdata:data,data:data,title:"Demography",id:"age-gender"});
     ageHist.createChart();
     ageHist.chart.append('g')
@@ -41,7 +41,7 @@ export default function(data){
       .attr('class','age-bar')
       .attr("x", (d) => this.xscale(d.x0))
       .attr('width',(d)=> this.xscale(d.x1)-this.xscale(d.x0)-1)
-      .attr("y",()=> this.innerHeight())
+      .attr("y",()=> this.height)
       .attr('height',0)
       .style('fill','2171b5')
       .on('mouseover',function(d){
@@ -51,7 +51,7 @@ export default function(data){
             ageHist.chart
             .append('text')
             .attr('class','age-text')
-            .attr('x',()=>ageHist.innerWidth())
+            .attr('x',()=>ageHist.width)
             .attr('text-anchor','end')
             .text(d.length+" coders aged between "+d.x0+" and "+d.x1);
         })
@@ -64,14 +64,14 @@ export default function(data){
       .transition()
       .duration(3000)
       .attr("y",(d)=> this.yscale(d.length))
-      .attr('height',(d)=>this.innerHeight()-this.yscale(d.length))
+      .attr('height',(d)=>this.height-this.yscale(d.length))
       .style('fill','2171b5');
       
        bars
       .transition()
       .duration(3000)
       .attr("y",(d)=> this.yscale(d.length))
-      .attr('height',(d)=>this.innerHeight()-this.yscale(d.length))
+      .attr('height',(d)=>this.height-this.yscale(d.length))
       .style('fill','2171b5');
       
       bars.exit().remove();
@@ -85,33 +85,30 @@ export default function(data){
     };
     
     ageHist.calculateScale = function() {
+      this.width = this.innerWidth();
+      this.height = this.innerHeight();
       this.xscale = d3.scaleLinear()
         .domain([d3.min(ageHist.data,function(d){return d.age}),d3.max(ageHist.data,function(d){return d.age})])
-        .range([0,ageHist.innerWidth()]);
+        .range([0,this.width]);
       this.hist = d3.histogram()
         .value(function(d){return d.age})
         .domain(ageHist.xscale.domain());
       this.bins = this.hist(this.data);
       this.yscale = d3.scaleLinear()
         .domain([0,d3.max(ageHist.bins,function(d){return d.length})])
-        .range([ageHist.innerHeight(),0]);
+        .range([this.height,0]);
     };
     
     ageHist.drawAxes= function(){  
        this.chart.select('.xaxis')
-        .call(d3.axisBottom(ageHist.xscale))
-        .attr('transform','translate(0,'+ageHist.innerHeight()+')')
-
-      
+        .call(d3.axisBottom(this.xscale))
+        .attr('transform','translate(0,'+this.height+')');
        this.chart.select('.yaxis')
-        .call(d3.axisLeft(ageHist.yscale));
-      
+        .call(d3.axisLeft(this.yscale));
        this.chart.select('.xaxis-text')
-        .attr('transform','translate('+ageHist.innerWidth()/2+','+(ageHist.innerHeight()+30)+')');
-
-      
+        .attr('transform','translate('+this.width/2+','+(this.height+30)+')');
        this.chart.select('.yaxis-text')
-        .attr('x',0-ageHist.innerHeight()/2)
+        .attr('x',0-this.height/2)
         .attr('y', 0-40);
     };
         
@@ -146,5 +143,5 @@ export default function(data){
      
      d3.select('#'+ageHist.id+' .loader').remove();
      
-    return resize;
+    resizes.push(resize);
 }
