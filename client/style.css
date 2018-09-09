@@ -109,11 +109,25 @@ select:focus {
 }
 
 
+@media (min-width: 576px) {
+  svg {
+    flex:0 0 auto;
+    height:100%;
+    width:80%;
+  } 
+  .edu-text p {
+    padding:10px;
+    text-align:center;
+    font-size:12px;
+  }  
+  
+}
+
 @media (min-width: 768px) {
   svg {
     flex:0 0 auto;
     height:100%;
-    width:60%;
+    width:50%;
   } 
   .edu-text p {
     padding:10px;

@@ -70,14 +70,14 @@ export default function(data,resizes){
                   .append('foreignObject')
                   .attr('width',eduPie.radius)
                   .attr('height',eduPie.radius)
-                  .attr('transform','translate('+(-eduPie.radius/2)+','+(-eduPie.radius/2.5)+')')
+                  .attr('transform','translate('+(-eduPie.radius/2)+','+(-eduPie.radius/2)+')')
                   .attr('class','edu-text')
                   .append('xhtml:p')
-                  .text(function(){
+                  .html(function(){
                       if (d.data.belongdegree){
-                          return (d.data.count/d.data.degreetotal*100).toFixed(2) + "% of coders with "+d.data.belongdegree+" major in " +d.data.value;
+                          return (d.data.count/d.data.degreetotal*100).toFixed(2) + "%<br>of coders with "+d.data.belongdegree+" major in " +d.data.value;
                       } else {
-                          return (d.data.count/totalCoders*100).toFixed(2) + "% of coders have "+d.data.value;
+                          return (d.data.count/totalCoders*100).toFixed(2) + "%<br>of coders have "+d.data.value;
                       }
                   });
               }
