@@ -99,8 +99,9 @@ export default function(data){
     
     ageHist.drawAxes= function(){  
        this.chart.select('.xaxis')
+        .call(d3.axisBottom(ageHist.xscale))
         .attr('transform','translate(0,'+ageHist.innerHeight()+')')
-        .call(d3.axisBottom(ageHist.xscale));
+
       
        this.chart.select('.yaxis')
         .call(d3.axisLeft(ageHist.yscale));
@@ -144,6 +145,6 @@ export default function(data){
     .text(function(d){return d});
      
      d3.select('#'+ageHist.id+' .loader').remove();
-     d3.select(window).on('resize', resize);
-    
+     
+    return resize;
 }

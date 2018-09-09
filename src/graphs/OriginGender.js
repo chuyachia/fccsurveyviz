@@ -3,33 +3,11 @@ import Pie from '../components/Pie';
 import palette from 'google-palette';
 import * as d3 from "d3";
 
-export default function(data){
-    var Map = Object.assign({},Graph,Pie, {data:data,w:1000,h:500,title:"Country",radius:50,id:'origin-gender'});
-
-    var sequenceColors=palette(['cb-Blues'],6).slice(2,6);
-    var categoryColors = ['rgb(116, 196, 118)','rgb(107, 174, 214)','rgb(253, 141, 60)'];
-    
-    Map.projection = d3.geoMercator()
-    .scale(Map.innerWidth() /2/ Math.PI)
-    .translate([Map.innerWidth() /2, Map.innerHeight() /2]);
-
-    Map.path = d3.geoPath()
-      .projection(Map.projection);
-    Map.mapPalette = [{value:100,color:sequenceColors[0]},
-                      {value:500,color:sequenceColors[1]},{value:1000,color:sequenceColors[2]},{value:2000,color:sequenceColors[3]}];
-    Map.piePalette = [{value:'female',color:categoryColors[0]},{value:'male',color:categoryColors[1]},{value:'other',color:categoryColors[2]}];
-    
-    Map.color = d3.scaleThreshold()
-    .domain(Map.mapPalette.map(function(e){return e.value}))
-    .range(Map.mapPalette.map(function(e){return e.color}));
-
-
-    Map.piecolor = Map.createColor(Map.piePalette.map(function(e){return e.value}),Map.piePalette.map(function(e){return e.color}));
-    Map.arc = Map.createArc(Map.radius);
-    Map.pie = Map.createPie(function(d) { return d.count; });
-    Map.createChart();
-    d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
+export default function(data,resizes){
+    var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",radius:50,margin:{top:20,left:20,bottom:20,right:20},id:'origin-gender'});
+    return d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
     .then(function(geojson) {
+      
       geojson.features.forEach(function(d) {
         if (Map.data[d.properties.name]){
           d.female = Map.data[d.properties.name]['female'];
@@ -42,95 +20,154 @@ export default function(data){
         }});
       
       
-      Map.chart.selectAll(".country")
-      .data(geojson.features)
-      .enter()
-      .append('path')
-      .attr('class','country')
-      .attr('d', Map.path)
-      .on('mouseover',function(d){
-        d3.select(this)
-          .attr('opacity','0.8');
-        Map.chart
-        .append('text')
-        .text((d.female+d.male+d.other)+" coder(s) in " + d.properties.name)
-        .attr('class','map-text')
-        .attr('text-anchor','left')
-        .attr('x',Map.radius*2)
-        .attr('y',Map.innerHeight());
+      
+      Map.createChart();
+      Map.arc = Map.createArc(Map.radius);
+      Map.pie = Map.createPie(function(d) { return d.count; });
+      
+      Map.buildPalette = function(){
+        var seqValues = [100,500,1000,2000];
+        var seqColors=palette(['cb-Blues'],6).slice(2,6);
+        var catValues = ['female','male','other'];
+        var catColors = ['rgb(116, 196, 118)','rgb(107, 174, 214)','rgb(253, 141, 60)'];     
+        this.mapPalette = seqValues.map(function(d,i){return {value:d,color:seqColors[i]}});
+        this.piePalette = catValues.map(function(d,i){return {value:d,color:catColors[i]}});
+        this.mapColor = d3.scaleThreshold()
+          .domain(this.mapPalette.map(function(e){return e.value}))
+          .range(this.mapPalette.map(function(e){return e.color}));
+          
+        this.pieColor = this.createColor(this.piePalette.map(function(e){return e.value}),this.piePalette.map(function(e){return e.color}))
+      };
+  
+      Map.calculateProj = function(){
+        this.projection = d3.geoMercator()
+        .scale(this.innerWidth() /1.8/ Math.PI)
+        .translate([this.innerWidth()/2, this.innerHeight()/2]);      
+        this.path = d3.geoPath()
+          .projection(this.projection);
+      };
+      
+      Map.drawMap = function(){
+        this.chart.selectAll(".country")
+        .data(geojson.features)
+        .enter()
+        .append('path')
+        .attr('class','country')
+        .attr('d', Map.path)
+        .on('mouseover',function(d){
+          d3.select(this)
+            .attr('opacity','0.8');
+          Map.chart
+          .append('text')
+          .text((d.female+d.male+d.other)+" coder(s) in " + d.properties.name)
+          .attr('class','map-text')
+          .attr('text-anchor','left')
+          .attr('x',Map.radius*2)
+          .attr('y',Map.innerHeight());
+          
+        if ((d.female+d.male+d.other)>0){
+         var pie=  Map.chart
+            .selectAll(".pie")
+            .data(Map.pie([{gender:Map.piePalette[0].value,count:d.female,color:Map.piePalette[0].color},
+                           {gender:Map.piePalette[1].value,count:d.male,color:Map.piePalette[1].color},
+                           {gender:Map.piePalette[2].value,count:d.other,color:Map.piePalette[2].color}]))
+            .enter()
+            .append("g")
+            .attr("class", "pie")
+            .attr('transform','translate('+Map.radius+','+(Map.innerHeight()-Map.radius)+')');
+            
+            pie.append("path")
+            .style('fill',function(d){return Map.pieColor(d.data.gender)})
+            .attr("d", Map.arc);
+  
+            var legend = pie.append('g')
+            .attr('transform',function(d,i){
+                return 'translate('+(-50+i*60)+','+(-Map.radius-10)+')';
+            });
+            legend.append('text')
+            .text(function(d){return d.data.gender})
+            .attr('x',12);
+            legend.append('rect')
+            .attr('y',-10)
+            .attr('height',10)
+            .attr('width',10)
+            .style('fill',function(d){return d.data.color});
+          }
+        })
+        .on('mouseout',function(){
+          d3.select(this)
+          .attr('opacity','1');
+          d3.selectAll('.map-text').remove();
+          d3.selectAll('.pie').remove();
+        })
+        .style('fill','grey')
+        .transition()
+        .delay(function(d,i){return i*15})
+        .style('fill', function(d) { return Map.mapColor(d.female+d.male+d.other)});
         
-      if ((d.female+d.male+d.other)>0){
-       var pie=  Map.chart
-          .selectAll(".pie")
-          .data(Map.pie([{gender:Map.piePalette[0].value,count:d.female,color:Map.piePalette[0].color},
-                         {gender:Map.piePalette[1].value,count:d.male,color:Map.piePalette[1].color},
-                         {gender:Map.piePalette[2].value,count:d.other,color:Map.piePalette[2].color}]))
-          .enter()
-          .append("g")
-          .attr("class", "pie")
-          .attr('transform','translate(0,'+Map.innerHeight()+')');
-        
-          pie.append("path")
-          .style('fill',function(d){return Map.piecolor(d.data.gender)})
-          .attr("d", Map.arc);
+      };
+      
+      Map.resizeMap = function(){
+        this.chart.selectAll(".country")
+        .attr('d', Map.path);
+      };
 
-          var legend = pie.append('g')
-          .attr('transform',function(d,i){
-              return 'translate('+(-50+i*60)+','+(-Map.radius-10)+')';
+      Map.drawLegend = function(){
+        var legend = Map.chart.selectAll('.legend')
+        .data(Map.mapPalette)
+        .enter()
+        .append('g')
+        .attr('class','legend')
+        .attr('transform',function(d,i){
+              return 'translate('+(Map.innerWidth()-80)+','+(Map.innerHeight()/2+i*20)+')';
           });
-          legend.append('text')
-          .text(function(d){return d.data.gender})
-          .attr('x',12);
-          legend.append('rect')
-          .attr('y',-10)
-          .attr('height',10)
-          .attr('width',10)
-          .style('fill',function(d){return d.data.color});
-        }
-      })
-      .on('mouseout',function(){
-        d3.select(this)
-        .attr('opacity','1');
-        d3.selectAll('.map-text').remove();
-        d3.selectAll('.pie').remove();
-      })
-      .style('fill','grey')
-      .transition()
-      .delay(function(d,i){return i*15})
-      .style('fill', function(d) { return Map.color(d.female+d.male+d.other)});
-
-      var legend = Map.chart.selectAll('.legend')
-      .data(Map.mapPalette)
-      .enter()
-      .append('g')
-      .attr('class','legend')
-      .attr('transform',function(d,i){
-          return 'translate('+(Map.innerWidth()-50)+','+(Map.innerHeight()/2+i*20)+')';
-      });
+        
+        legend.append('text')
+        .text(function(d,i){
+          if (i ==0)
+            return '0-'+d.value;
+          else if (i==Map.mapPalette.length-1)
+            return Map.mapPalette[i-1].value+' up';
+          else
+            return Map.mapPalette[i-1].value +'-'+d.value;
+        })
+        .attr('x',12);
       
-      legend.append('text')
-      .text(function(d,i){
-        if (i ==0)
-          return '0-'+d.value;
-        else if (i==Map.mapPalette.length-1)
-          return Map.mapPalette[i-1].value+' up';
-        else
-          return Map.mapPalette[i-1].value +'-'+d.value;
-      })
-      .attr('x',12);
+        legend.append('rect')
+        .attr('y',-10)
+        .attr('height',10)
+        .attr('width',10)
+        .style('fill',function(d){return d.color});
+      };
       
-      legend.append('rect')
-      .attr('y',-10)
-      .attr('height',10)
-      .attr('width',10)
-      .style('fill',function(d){return d.color});
-
-
+      Map.resizeLegend = function(){
+          this.chart.selectAll('.legend')
+          .data(this.mapPalette)
+          .attr('transform',function(d,i){
+              return 'translate('+(Map.innerWidth()-80)+','+(Map.innerHeight()/2+i*20)+')';
+          });
+      };
+      
+      var draw = function(){
+        Map.buildPalette();
+        Map.calculateProj();
+        Map.drawMap();
+        Map.drawLegend();
+      };
+      
+      var resize = function(){
+        Map.calculateProj();
+        Map.resizeMap();
+        Map.resizeLegend();
+      }
+      
+      draw();
+      d3.select('#'+Map.id+' .loader').remove();
+      //d3.select(window).on('resize', resize);
+      resizes.push(resize);
     })
     .catch(function(err){
         console.log(err);
     });
-    
-    d3.select('#'+Map.id+' .loader').remove();
-    
+
 }

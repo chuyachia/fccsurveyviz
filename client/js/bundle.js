@@ -34202,17 +34202,17 @@ Object.defineProperty(exports, "__esModule", {
 var _d = __webpack_require__(/*! d3 */ "./node_modules/d3/index.js");
 
 exports.default = {
-  height: '400px',
+  height: '500px',
   chart: null,
-  margin: { top: 50, right: 50, bottom: 50, left: 60 },
+  margin: { top: 50, right: 50, bottom: 50, left: 50 },
   createChart: function createChart() {
-    var element = (0, _d.select)('main').append('article').attr('id', this.id).style('height', this.height);
+    var element = (0, _d.select)('main').append('article').attr('id', this.id);
 
     element.append('h2').text(this.title);
 
     element.append('div').attr('class', 'loader');
 
-    this.chart = element.append('figure').append('svg').append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
+    this.chart = element.append('figure').style('height', this.height).append('svg').append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
   },
   innerWidth: function innerWidth() {
     return parseInt((0, _d.select)('#' + this.id + ' svg').style("width")) - this.margin.left - this.margin.right;
@@ -34354,7 +34354,7 @@ exports.default = function (data) {
   };
 
   ageHist.drawAxes = function () {
-    this.chart.select('.xaxis').attr('transform', 'translate(0,' + ageHist.innerHeight() + ')').call(d3.axisBottom(ageHist.xscale));
+    this.chart.select('.xaxis').call(d3.axisBottom(ageHist.xscale)).attr('transform', 'translate(0,' + ageHist.innerHeight() + ')');
 
     this.chart.select('.yaxis').call(d3.axisLeft(ageHist.yscale));
 
@@ -34388,7 +34388,8 @@ exports.default = function (data) {
   });
 
   d3.select('#' + ageHist.id + ' .loader').remove();
-  d3.select(window).on('resize', resize);
+
+  return resize;
 };
 
 var _Graph = __webpack_require__(/*! ../components/Graph */ "./src/components/Graph.js");
@@ -34421,7 +34422,8 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = function (data) {
     var zoomed = false;
-    var eduPie = Object.assign({}, _Graph2.default, _Pie2.default, { data: { degree: data.degree, major: data.major }, h: 600, radius: 180, id: 'education', title: 'Educational background' });
+    var eduPie = Object.assign({}, _Graph2.default, _Pie2.default, { data: { degree: data.degree, major: data.major }, height: '600px', id: 'education', title: 'Educational background' });
+    eduPie.radius = eduPie.innerWidth() / 2;
     var totalCoders = eduPie.data.major.map(function (d) {
         return d.count;
     }).reduce(function (a, b) {
@@ -34551,35 +34553,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-exports.default = function (data) {
-  var Map = Object.assign({}, _Graph2.default, _Pie2.default, { data: data, w: 1000, h: 500, title: "Country", radius: 50, id: 'origin-gender' });
+exports.default = function (data, resizes) {
+  var Map = Object.assign({}, _Graph2.default, _Pie2.default, { data: data, title: "Country", radius: 50, margin: { top: 20, left: 20, bottom: 20, right: 20 }, id: 'origin-gender' });
+  return d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645').then(function (geojson) {
 
-  var sequenceColors = (0, _googlePalette2.default)(['cb-Blues'], 6).slice(2, 6);
-  var categoryColors = ['rgb(116, 196, 118)', 'rgb(107, 174, 214)', 'rgb(253, 141, 60)'];
-
-  Map.projection = d3.geoMercator().scale(Map.innerWidth() / 2 / Math.PI).translate([Map.innerWidth() / 2, Map.innerHeight() / 2]);
-
-  Map.path = d3.geoPath().projection(Map.projection);
-  Map.mapPalette = [{ value: 100, color: sequenceColors[0] }, { value: 500, color: sequenceColors[1] }, { value: 1000, color: sequenceColors[2] }, { value: 2000, color: sequenceColors[3] }];
-  Map.piePalette = [{ value: 'female', color: categoryColors[0] }, { value: 'male', color: categoryColors[1] }, { value: 'other', color: categoryColors[2] }];
-
-  Map.color = d3.scaleThreshold().domain(Map.mapPalette.map(function (e) {
-    return e.value;
-  })).range(Map.mapPalette.map(function (e) {
-    return e.color;
-  }));
-
-  Map.piecolor = Map.createColor(Map.piePalette.map(function (e) {
-    return e.value;
-  }), Map.piePalette.map(function (e) {
-    return e.color;
-  }));
-  Map.arc = Map.createArc(Map.radius);
-  Map.pie = Map.createPie(function (d) {
-    return d.count;
-  });
-  Map.createChart();
-  d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645').then(function (geojson) {
     geojson.features.forEach(function (d) {
       if (Map.data[d.properties.name]) {
         d.female = Map.data[d.properties.name]['female'];
@@ -34592,53 +34569,118 @@ exports.default = function (data) {
       }
     });
 
-    Map.chart.selectAll(".country").data(geojson.features).enter().append('path').attr('class', 'country').attr('d', Map.path).on('mouseover', function (d) {
-      d3.select(this).attr('opacity', '0.8');
-      Map.chart.append('text').text(d.female + d.male + d.other + " coder(s) in " + d.properties.name).attr('class', 'map-text').attr('text-anchor', 'left').attr('x', Map.radius * 2).attr('y', Map.innerHeight());
-
-      if (d.female + d.male + d.other > 0) {
-        var pie = Map.chart.selectAll(".pie").data(Map.pie([{ gender: Map.piePalette[0].value, count: d.female, color: Map.piePalette[0].color }, { gender: Map.piePalette[1].value, count: d.male, color: Map.piePalette[1].color }, { gender: Map.piePalette[2].value, count: d.other, color: Map.piePalette[2].color }])).enter().append("g").attr("class", "pie").attr('transform', 'translate(0,' + Map.innerHeight() + ')');
-
-        pie.append("path").style('fill', function (d) {
-          return Map.piecolor(d.data.gender);
-        }).attr("d", Map.arc);
-
-        var legend = pie.append('g').attr('transform', function (d, i) {
-          return 'translate(' + (-50 + i * 60) + ',' + (-Map.radius - 10) + ')';
-        });
-        legend.append('text').text(function (d) {
-          return d.data.gender;
-        }).attr('x', 12);
-        legend.append('rect').attr('y', -10).attr('height', 10).attr('width', 10).style('fill', function (d) {
-          return d.data.color;
-        });
-      }
-    }).on('mouseout', function () {
-      d3.select(this).attr('opacity', '1');
-      d3.selectAll('.map-text').remove();
-      d3.selectAll('.pie').remove();
-    }).style('fill', 'grey').transition().delay(function (d, i) {
-      return i * 15;
-    }).style('fill', function (d) {
-      return Map.color(d.female + d.male + d.other);
+    Map.createChart();
+    Map.arc = Map.createArc(Map.radius);
+    Map.pie = Map.createPie(function (d) {
+      return d.count;
     });
 
-    var legend = Map.chart.selectAll('.legend').data(Map.mapPalette).enter().append('g').attr('class', 'legend').attr('transform', function (d, i) {
-      return 'translate(' + (Map.innerWidth() - 50) + ',' + (Map.innerHeight() / 2 + i * 20) + ')';
-    });
+    Map.buildPalette = function () {
+      var seqValues = [100, 500, 1000, 2000];
+      var seqColors = (0, _googlePalette2.default)(['cb-Blues'], 6).slice(2, 6);
+      var catValues = ['female', 'male', 'other'];
+      var catColors = ['rgb(116, 196, 118)', 'rgb(107, 174, 214)', 'rgb(253, 141, 60)'];
+      this.mapPalette = seqValues.map(function (d, i) {
+        return { value: d, color: seqColors[i] };
+      });
+      this.piePalette = catValues.map(function (d, i) {
+        return { value: d, color: catColors[i] };
+      });
+      this.mapColor = d3.scaleThreshold().domain(this.mapPalette.map(function (e) {
+        return e.value;
+      })).range(this.mapPalette.map(function (e) {
+        return e.color;
+      }));
 
-    legend.append('text').text(function (d, i) {
-      if (i == 0) return '0-' + d.value;else if (i == Map.mapPalette.length - 1) return Map.mapPalette[i - 1].value + ' up';else return Map.mapPalette[i - 1].value + '-' + d.value;
-    }).attr('x', 12);
+      this.pieColor = this.createColor(this.piePalette.map(function (e) {
+        return e.value;
+      }), this.piePalette.map(function (e) {
+        return e.color;
+      }));
+    };
 
-    legend.append('rect').attr('y', -10).attr('height', 10).attr('width', 10).style('fill', function (d) {
-      return d.color;
-    });
+    Map.calculateProj = function () {
+      this.projection = d3.geoMercator().scale(this.innerWidth() / 1.8 / Math.PI).translate([this.innerWidth() / 2, this.innerHeight() / 2]);
+      this.path = d3.geoPath().projection(this.projection);
+    };
+
+    Map.drawMap = function () {
+      this.chart.selectAll(".country").data(geojson.features).enter().append('path').attr('class', 'country').attr('d', Map.path).on('mouseover', function (d) {
+        d3.select(this).attr('opacity', '0.8');
+        Map.chart.append('text').text(d.female + d.male + d.other + " coder(s) in " + d.properties.name).attr('class', 'map-text').attr('text-anchor', 'left').attr('x', Map.radius * 2).attr('y', Map.innerHeight());
+
+        if (d.female + d.male + d.other > 0) {
+          var pie = Map.chart.selectAll(".pie").data(Map.pie([{ gender: Map.piePalette[0].value, count: d.female, color: Map.piePalette[0].color }, { gender: Map.piePalette[1].value, count: d.male, color: Map.piePalette[1].color }, { gender: Map.piePalette[2].value, count: d.other, color: Map.piePalette[2].color }])).enter().append("g").attr("class", "pie").attr('transform', 'translate(' + Map.radius + ',' + (Map.innerHeight() - Map.radius) + ')');
+
+          pie.append("path").style('fill', function (d) {
+            return Map.pieColor(d.data.gender);
+          }).attr("d", Map.arc);
+
+          var legend = pie.append('g').attr('transform', function (d, i) {
+            return 'translate(' + (-50 + i * 60) + ',' + (-Map.radius - 10) + ')';
+          });
+          legend.append('text').text(function (d) {
+            return d.data.gender;
+          }).attr('x', 12);
+          legend.append('rect').attr('y', -10).attr('height', 10).attr('width', 10).style('fill', function (d) {
+            return d.data.color;
+          });
+        }
+      }).on('mouseout', function () {
+        d3.select(this).attr('opacity', '1');
+        d3.selectAll('.map-text').remove();
+        d3.selectAll('.pie').remove();
+      }).style('fill', 'grey').transition().delay(function (d, i) {
+        return i * 15;
+      }).style('fill', function (d) {
+        return Map.mapColor(d.female + d.male + d.other);
+      });
+    };
+
+    Map.resizeMap = function () {
+      this.chart.selectAll(".country").attr('d', Map.path);
+    };
+
+    Map.drawLegend = function () {
+      var legend = Map.chart.selectAll('.legend').data(Map.mapPalette).enter().append('g').attr('class', 'legend').attr('transform', function (d, i) {
+        return 'translate(' + (Map.innerWidth() - 80) + ',' + (Map.innerHeight() / 2 + i * 20) + ')';
+      });
+
+      legend.append('text').text(function (d, i) {
+        if (i == 0) return '0-' + d.value;else if (i == Map.mapPalette.length - 1) return Map.mapPalette[i - 1].value + ' up';else return Map.mapPalette[i - 1].value + '-' + d.value;
+      }).attr('x', 12);
+
+      legend.append('rect').attr('y', -10).attr('height', 10).attr('width', 10).style('fill', function (d) {
+        return d.color;
+      });
+    };
+
+    Map.resizeLegend = function () {
+      this.chart.selectAll('.legend').data(this.mapPalette).attr('transform', function (d, i) {
+        return 'translate(' + (Map.innerWidth() - 80) + ',' + (Map.innerHeight() / 2 + i * 20) + ')';
+      });
+    };
+
+    var draw = function draw() {
+      Map.buildPalette();
+      Map.calculateProj();
+      Map.drawMap();
+      Map.drawLegend();
+    };
+
+    var resize = function resize() {
+      Map.calculateProj();
+      Map.resizeMap();
+      Map.resizeLegend();
+    };
+
+    draw();
+    d3.select('#' + Map.id + ' .loader').remove();
+    //d3.select(window).on('resize', resize);
+    resizes.push(resize);
   }).catch(function (err) {
     console.log(err);
   });
-
-  d3.select('#' + Map.id + ' .loader').remove();
 };
 
 var _Graph = __webpack_require__(/*! ../components/Graph */ "./src/components/Graph.js");
@@ -34753,10 +34795,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
     }
     var scrollCount = 0;
     var scrollPages = [{ func: _OriginGender2.default, data: countryData }, { func: _Education2.default, data: educationData }];
+    var resizes = [];
 
     (0, _d.select)('.loaderwrap').remove();
-    (0, _AgeGender2.default)(ageData);
+    resizes.push((0, _AgeGender2.default)(ageData));
+    (0, _OriginGender2.default)(countryData, resizes);
 
+    (0, _d.select)(window).on('resize', function () {
+      resizes.forEach(function (f) {
+        f();
+      });
+    });
     /*while (document.body.scrollHeight<= document.body.offsetHeight) {
       scrollPages[scrollCount].func(scrollPages[scrollCount].data);
       scrollCount+=1;

@@ -6,7 +6,8 @@ import * as d3 from "d3";
 
 export default function(data){
     var zoomed = false;
-    var eduPie = Object.assign({},Graph,Pie,{data:{degree:data.degree,major:data.major},h:600,radius:180,id:'education',title:'Educational background'});
+    var eduPie = Object.assign({},Graph,Pie,{data:{degree:data.degree,major:data.major},height:'600px',id:'education',title:'Educational background'});
+    eduPie.radius = eduPie.innerWidth()/2;
     var totalCoders = eduPie.data.major.map(function(d){return d.count}).reduce(function(a,b){return a+b});
     var degreeCats = eduPie.data.degree.map(function(d){return d.value});
     var categoryColors1 = palette('tol-dv',degreeCats.length);    

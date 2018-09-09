@@ -78,11 +78,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
     var scrollCount = 0;
     var scrollPages = [{func:OriginGender,data:countryData},{func:Education,data:educationData}];
-
+    var resizes = []
 
     select('.loaderwrap').remove();
-    AgeGender(ageData);
+    resizes.push(AgeGender(ageData));
+    OriginGender(countryData,resizes);
 
+    select(window).on('resize', function(){
+      resizes.forEach(function(f){f();});
+    });
     /*while (document.body.scrollHeight<= document.body.offsetHeight) {
       scrollPages[scrollCount].func(scrollPages[scrollCount].data);
       scrollCount+=1;
