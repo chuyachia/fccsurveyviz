@@ -121,7 +121,7 @@ export default function(data,resizes){
         .append('g')
         .attr('class','legend')
         .attr('transform',function(d,i){
-              return 'translate('+(Map.width-80)+','+(Map.height/2+i*20)+')';
+              return 'translate('+(Map.width-80)+','+(Map.height*0.75+i*20)+')';
           });
         
         legend.append('text')
@@ -146,7 +146,7 @@ export default function(data,resizes){
           this.chart.selectAll('.legend')
           .data(this.mapPalette)
           .attr('transform',function(d,i){
-              return 'translate('+(Map.width-80)+','+(Map.height/2+i*20)+')';
+              return 'translate('+(Map.width-80)+','+(Map.height*0.75+i*20)+')';
           });
       };
       
