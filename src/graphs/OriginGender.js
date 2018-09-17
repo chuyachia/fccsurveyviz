@@ -4,17 +4,20 @@ import palette from 'google-palette';
 import * as d3 from "d3";
 
 export default function(data,resizes){
-    var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",margin:{top:20,left:20,bottom:20,right:20},id:'origin-gender'});
+    var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",margin : {top: 20, right: 20, bottom: 20, left: 20},id:'origin-gender'});
     Map.createChart();
     return d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
     .then(function(geojson) {
       
-      var totalCoders= [];
+      var maxCoders= null;
       geojson.features.forEach(function(d) {
         if (Map.data[d.properties.name]){
           d.female = Map.data[d.properties.name]['female'];
           d.male = Map.data[d.properties.name]['male'];
           d.other = Map.data[d.properties.name]['other'];
+          var total = d.female+d.male+d.other;
+          if (!maxCoders||total>maxCoders)
+          maxCoders = total;
         } else {
           d.female = 0;
           d.male=0;
@@ -26,16 +29,32 @@ export default function(data,resizes){
       Map.pie = Map.createPie(function(d) { return d.count; });
       
       Map.buildPalette = function(){
-        var seqValues = [100,500,1000,2000];
-        var seqColors=palette(['cb-Blues'],7).slice(2,7);
+        var seqColors=palette(['cb-Blues'],2);
         var catValues = ['female','male','other'];
         var catColors = ['rgb(116, 196, 118)','rgb(107, 174, 214)','rgb(253, 141, 60)'];     
-        this.mapPalette = seqColors.map(function(d,i){return {value:seqValues[i],color:d}});
         this.piePalette = catValues.map(function(d,i){return {value:d,color:catColors[i]}});
-        this.mapColor = d3.scaleThreshold()
-          .domain(seqValues)
-          .range(seqColors);
+        this.mapColor = d3.scalePow()
+        .exponent(0.2)
+        .domain([0,maxCoders])
+        .range(["#"+seqColors[0],"#"+seqColors[1]]);
         this.pieColor = this.createColor(this.piePalette.map(function(e){return e.value}),this.piePalette.map(function(e){return e.color}));
+        
+        var gradientbar = this.chart.append("defs")
+        .append("svg:linearGradient")
+        .attr("id", "gradient")
+        .attr("x1", "100%")
+        .attr("y1", "100%")
+        .attr("x2", "100%")
+        .attr("y2", "0%")
+        .attr("spreadMethod", "pad");
+        gradientbar.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color","#"+seqColors[0])
+        .attr("stop-opacity", 1);
+        gradientbar.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#"+seqColors[1])
+        .attr("stop-opacity", 1);      
       };
   
       Map.calculateScale= function(){
@@ -44,10 +63,15 @@ export default function(data,resizes){
         this.radius = this.width/9;
         this.arc = this.createArc(this.radius);
         this.projection = d3.geoMercator()
-        .scale(this.width /1.8/ Math.PI)
+        .scale(this.width /2.5/ Math.PI)
         .translate([this.width/2, this.height/2]);      
         this.path = d3.geoPath()
           .projection(this.projection);
+        this.legendScale = d3.scalePow()
+        .exponent(0.2)
+        .domain([0,maxCoders])
+        .range([this.outerHeight()-this.margin.top,0])
+        .nice();
       };
       
       Map.drawMap = function(){
@@ -107,7 +131,6 @@ export default function(data,resizes){
         .transition()
         .delay(function(d,i){return i*15})
         .style('fill', function(d) { return Map.mapColor(d.female+d.male+d.other)});
-        
       };
       
       Map.resizeMap = function(){
@@ -116,39 +139,32 @@ export default function(data,resizes){
       };
 
       Map.drawLegend = function(){
-        var legend = this.chart.selectAll('.legend')
-        .data(this.mapPalette)
-        .enter()
-        .append('g')
-        .attr('class','legend')
-        .attr('transform',function(d,i){
-              return 'translate('+(Map.width-80)+','+(Map.height*0.75+i*20)+')';
-          });
-        
-        legend.append('text')
-        .text(function(d,i){
-          if (i ==0)
-            return '0-'+d.value;
-          else if (i==Map.mapPalette.length-1)
-            return Map.mapPalette[i-1].value+' up';
-          else
-            return Map.mapPalette[i-1].value +'-'+d.value;
-        })
-        .attr('x',12);
-      
-        legend.append('rect')
-        .attr('y',-10)
-        .attr('height',10)
-        .attr('width',10)
-        .style('fill',function(d){return d.color});
+        d3.select('#'+this.id+' svg')
+        .append("g")
+        .attr('class','legend-text');
+          
+        d3.select('#'+this.id+' svg')
+        .append("rect")
+        .attr('class','legend-bar')
+        .style("fill", "url(#gradient)");        
       };
       
       Map.resizeLegend = function(){
-          this.chart.selectAll('.legend')
-          .data(this.mapPalette)
-          .attr('transform',function(d,i){
-              return 'translate('+(Map.width-80)+','+(Map.height*0.75+i*20)+')';
-          });
+        var width= this.outerWidth();
+        var height= this.outerHeight();
+        this.legendAxis = d3.axisLeft()
+        .scale(this.legendScale)
+        .ticks(5);
+        
+        d3.select('#'+this.id+' .legend-text')
+        .attr('transform','translate('+(width-width/50)+','+this.margin.top/2+')')
+        .call(this.legendAxis);
+        
+        d3.select('#'+this.id+' .legend-bar')
+        .attr("width", width/50)
+        .attr("height", height-this.margin.top)
+        .attr('transform','translate('+(width-width/50)+','+this.margin.top/2+')');
+        
       };
       
       var draw = function(){
@@ -156,13 +172,14 @@ export default function(data,resizes){
         Map.calculateScale();
         Map.drawMap();
         Map.drawLegend();
+        Map.resizeLegend();
       };
       
       var resize = function(){
         Map.calculateScale();
         Map.resizeMap();
         Map.resizeLegend();
-      }
+      };
       
       draw();
       d3.select('#'+Map.id+' .loader').remove();

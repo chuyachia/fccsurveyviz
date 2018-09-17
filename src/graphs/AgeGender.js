@@ -45,7 +45,7 @@ export default function(data,resizes){
       .attr('width',(d)=> this.xscale(d.x1)-this.xscale(d.x0)-1)
       .attr("y",()=> this.height)
       .attr('height',0)
-      .style('fill','2171b5')
+      .style('fill','rgb(49, 130, 189)')
       .on('mouseover',function(d){
             d3.select(this)
             .attr('opacity','0.8');
@@ -67,14 +67,14 @@ export default function(data,resizes){
       .duration(3000)
       .attr("y",(d)=> this.yscale(d.length))
       .attr('height',(d)=>this.height-this.yscale(d.length))
-      .style('fill','2171b5');
+      .style('fill','rgb(49, 130, 189)');
       
        bars
       .transition()
       .duration(3000)
       .attr("y",(d)=> this.yscale(d.length))
       .attr('height',(d)=>this.height-this.yscale(d.length))
-      .style('fill','2171b5');
+      .style('fill','rgb(49, 130, 189)');
       
       bars.exit().remove();
     };
@@ -93,14 +93,16 @@ export default function(data,resizes){
       this.height = this.innerHeight();
       this.xscale = d3.scaleLinear()
         .domain([d3.min(ageHist.data,function(d){return d.age}),d3.max(ageHist.rawdata,function(d){return d.age})])
-        .range([0,this.width]);
+        .range([0,this.width])
+        .nice();
       this.hist = d3.histogram()
         .value(function(d){return d.age})
         .domain(ageHist.xscale.domain());
       this.bins = this.hist(this.data);
       this.yscale = d3.scaleLinear()
         .domain([0,yscaleMax||d3.max(ageHist.bins,function(d){return d.length})])
-        .range([this.height,0]);
+        .range([this.height,0])
+        .nice();
         
       if (!yscaleMax) yscaleMax = d3.max(ageHist.bins,function(d){return d.length});
     };
