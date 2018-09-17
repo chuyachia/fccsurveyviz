@@ -9,6 +9,7 @@ export default function(data,resizes){
     return d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
     .then(function(geojson) {
       
+      var totalCoders= [];
       geojson.features.forEach(function(d) {
         if (Map.data[d.properties.name]){
           d.female = Map.data[d.properties.name]['female'];
@@ -26,14 +27,14 @@ export default function(data,resizes){
       
       Map.buildPalette = function(){
         var seqValues = [100,500,1000,2000];
-        var seqColors=palette(['cb-Blues'],6).slice(2,6);
+        var seqColors=palette(['cb-Blues'],7).slice(2,7);
         var catValues = ['female','male','other'];
         var catColors = ['rgb(116, 196, 118)','rgb(107, 174, 214)','rgb(253, 141, 60)'];     
-        this.mapPalette = seqValues.map(function(d,i){return {value:d,color:seqColors[i]}});
+        this.mapPalette = seqColors.map(function(d,i){return {value:seqValues[i],color:d}});
         this.piePalette = catValues.map(function(d,i){return {value:d,color:catColors[i]}});
         this.mapColor = d3.scaleThreshold()
-          .domain(this.mapPalette.map(function(e){return e.value}))
-          .range(this.mapPalette.map(function(e){return e.color}));
+          .domain(seqValues)
+          .range(seqColors);
         this.pieColor = this.createColor(this.piePalette.map(function(e){return e.value}),this.piePalette.map(function(e){return e.color}));
       };
   
