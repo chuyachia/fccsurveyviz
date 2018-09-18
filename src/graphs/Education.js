@@ -1,7 +1,7 @@
 import Graph from '../components/Graph';
 import Pie from '../components/Pie';
 import palette from 'google-palette';
-import * as d3 from "d3";
+import {selectAll,select,interpolate} from "d3";
 
 
 export default function(data,resizes){
@@ -48,22 +48,22 @@ export default function(data,resizes){
         var arc = eduPie.createArc(outerradius,innerradius);        
         function arcTween() {
             return function(d,i) {
-                var interpolate = d3.interpolate(d, data[i]);
+                var interpolated = interpolate(d, data[i]);
                 for (var k in data[i]) d[k] = data[i][k]; 
                 return function(t) {
-                    t  = interpolate(t);
+                    t  = interpolated(t);
                     return arc(t);
                 };
             };
         }
-        d3.selectAll('.'+classname)
+        selectAll('.'+classname)
         .transition()
         .duration(3000)
         .attrTween("d", arcTween(function(d){return d;}))
         .each(function(d,i){
-            d3.select(this)
+            select(this)
             .on('mouseover',function(){
-                d3.select(this)
+                select(this)
                 .attr('opacity','0.8');
               if (d.data.value!=="NA"){
                   eduPie.chart
@@ -83,9 +83,9 @@ export default function(data,resizes){
               }
             })
             .on('mouseout',function(){
-              d3.select(this)
+              select(this)
               .attr('opacity','1');
-              d3.selectAll('.edu-text').remove();
+              selectAll('.edu-text').remove();
             })
             .on('click',function(d){
                 if(!d.data.belongdegree){
@@ -135,6 +135,6 @@ export default function(data,resizes){
     }; 
 
     draw();
-    d3.select('#'+eduPie.id+' .loader').remove();
+    select('#'+eduPie.id+' .loader').remove();
     resizes.push(resize);
 }

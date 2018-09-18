@@ -1,12 +1,12 @@
 import Graph from '../components/Graph';
 import Pie from '../components/Pie';
 import palette from 'google-palette';
-import * as d3 from "d3";
+import {select,json,scalePow,geoPath,geoMercator,selectAll,axisLeft} from "d3";
 
 export default function(data,resizes){
     var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",margin : {top: 20, right: 20, bottom: 20, left: 20},id:'origin-gender'});
     Map.createChart();
-    return d3.json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
+    return json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
     .then(function(geojson) {
       
       var maxCoders= null;
@@ -33,7 +33,7 @@ export default function(data,resizes){
         var catValues = ['female','male','other'];
         var catColors = ['rgb(116, 196, 118)','rgb(107, 174, 214)','rgb(253, 141, 60)'];     
         this.piePalette = catValues.map(function(d,i){return {value:d,color:catColors[i]}});
-        this.mapColor = d3.scalePow()
+        this.mapColor = scalePow()
         .exponent(0.2)
         .domain([0,maxCoders])
         .range(["#"+seqColors[0],"#"+seqColors[1]]);
@@ -62,12 +62,12 @@ export default function(data,resizes){
         this.height = this.innerHeight();
         this.radius = this.width/9;
         this.arc = this.createArc(this.radius);
-        this.projection = d3.geoMercator()
+        this.projection = geoMercator()
         .scale(this.width /2.5/ Math.PI)
         .translate([this.width/2, this.height/2]);      
-        this.path = d3.geoPath()
+        this.path = geoPath()
           .projection(this.projection);
-        this.legendScale = d3.scalePow()
+        this.legendScale = scalePow()
         .exponent(0.2)
         .domain([0,maxCoders])
         .range([this.outerHeight()-this.margin.top,0])
@@ -83,7 +83,7 @@ export default function(data,resizes){
         .attr('d', this.path)
         .on('mouseover',function(d){
           var total = d.female+d.male+d.other;
-          d3.select(this)
+          select(this)
             .attr('opacity','0.8');
           Map.chart
           .append('text')
@@ -96,7 +96,7 @@ export default function(data,resizes){
           var pointerHeight = Map.legendScale(total);
           var pointerWidth= Map.outerWidth();
           var pointerSide = pointerWidth/75;
-          d3.select('#'+Map.id+' svg')
+          select('#'+Map.id+' svg')
           .append('polygon')
           .attr('class','pointer')
           .attr('points',(pointerWidth+pointerSide*Math.sin(45))+','+(pointerHeight+pointerSide/2)+' '+
@@ -135,11 +135,11 @@ export default function(data,resizes){
           }
         })
         .on('mouseout',function(){
-          d3.select(this)
+          select(this)
           .attr('opacity','1');
-          d3.selectAll('.map-text').remove();
-          d3.selectAll('.pie').remove();
-          d3.selectAll('.pointer').remove();
+          selectAll('.map-text').remove();
+          selectAll('.pie').remove();
+          selectAll('.pointer').remove();
         })
         .style('fill','grey')
         .transition()
@@ -153,11 +153,11 @@ export default function(data,resizes){
       };
 
       Map.drawLegend = function(){
-        d3.select('#'+this.id+' svg')
+        select('#'+this.id+' svg')
         .append("g")
         .attr('class','legend-text');
           
-        d3.select('#'+this.id+' svg')
+        select('#'+this.id+' svg')
         .append("rect")
         .attr('class','legend-bar')
         .style("fill", "url(#gradient)");        
@@ -169,15 +169,15 @@ export default function(data,resizes){
         var height= this.outerHeight();
         var pointerSide = width/75;
         var barWidth = width/50;
-        this.legendAxis = d3.axisLeft()
+        this.legendAxis = axisLeft()
         .scale(this.legendScale)
         .ticks(5);
         
-        d3.select('#'+this.id+' .legend-text')
+        select('#'+this.id+' .legend-text')
         .attr('transform','translate('+(width-barWidth-pointerSide)+','+this.margin.top/2+')')
         .call(this.legendAxis);
         
-        d3.select('#'+this.id+' .legend-bar')
+        select('#'+this.id+' .legend-bar')
         .attr("width", width/50)
         .attr("height", height-this.margin.top)
         .attr('transform','translate('+(width-barWidth-pointerSide)+','+this.margin.top/2+')');
@@ -198,7 +198,7 @@ export default function(data,resizes){
       };
       
       draw();
-      d3.select('#'+Map.id+' .loader').remove();
+      select('#'+Map.id+' .loader').remove();
       resizes.push(resize);
     })
     .catch(function(err){

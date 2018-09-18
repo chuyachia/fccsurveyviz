@@ -1,5 +1,5 @@
 import Graph from '../components/Graph';
-import * as d3 from "d3";
+import {select,event,min,max,scaleLinear,histogram,axisBottom,axisLeft} from "d3";
 
 export default function(data,resizes){
     var ageHist = Object.assign({},Graph,{rawdata:data,data:data,title:"Demography",id:"age-gender"});
@@ -19,6 +19,8 @@ export default function(data,resizes){
         .attr("transform", 'rotate(-90)')
         .text('Count')
         .attr('text-anchor','middle');
+    var tooltip = select('#'+ageHist.id).append('div')
+    .attr('class','age-tooltip');
     
     var yscaleMax;
         
@@ -47,21 +49,20 @@ export default function(data,resizes){
       .attr('height',0)
       .style('fill','rgb(49, 130, 189)')
       .on('mouseover',function(d){
-            d3.select(this)
+            select(this)
             .attr('opacity','0.8');
-        
-            ageHist.chart
-            .append('text')
-            .attr('class','age-text')
-            .attr('x',()=>ageHist.width)
-            .attr('text-anchor','end')
-            .text(d.length+" coders aged between "+d.x0+" and "+d.x1);
+        })
+        .on('mousemove',function(d){
+            tooltip
+              .style("left", event.pageX - 50 + "px")
+              .style("top", event.pageY - 70 + "px")
+              .style("display", "inline-block")
+              .html(d.length+" coders aged between "+d.x0+" and "+d.x1);          
         })
         .on('mouseout',function(){
-            d3.select(this)
+            select(this)
             .attr('opacity','1');
-            d3.selectAll('.age-text')
-            .remove();
+            tooltip.style("display", "none");
         })
       .transition()
       .duration(3000)
@@ -91,29 +92,29 @@ export default function(data,resizes){
     ageHist.calculateScale = function() {
       this.width = this.innerWidth();
       this.height = this.innerHeight();
-      this.xscale = d3.scaleLinear()
-        .domain([d3.min(ageHist.data,function(d){return d.age}),d3.max(ageHist.rawdata,function(d){return d.age})])
+      this.xscale = scaleLinear()
+        .domain([min(ageHist.data,function(d){return d.age}),max(ageHist.rawdata,function(d){return d.age})])
         .range([0,this.width])
         .nice();
-      this.hist = d3.histogram()
+      this.hist = histogram()
         .value(function(d){return d.age})
         .domain(ageHist.xscale.domain());
       this.bins = this.hist(this.data);
-      this.yscale = d3.scaleLinear()
-        .domain([0,yscaleMax||d3.max(ageHist.bins,function(d){return d.length})])
+      this.yscale = scaleLinear()
+        .domain([0,yscaleMax||max(ageHist.bins,function(d){return d.length})])
         .range([this.height,0])
         .nice();
         
-      if (!yscaleMax) yscaleMax = d3.max(ageHist.bins,function(d){return d.length});
+      if (!yscaleMax) yscaleMax = max(ageHist.bins,function(d){return d.length});
     };
     
     
     ageHist.drawAxes= function(){  
        this.chart.select('.xaxis')
-        .call(d3.axisBottom(this.xscale))
+        .call(axisBottom(this.xscale))
         .attr('transform','translate(0,'+this.height+')');
        this.chart.select('.yaxis')
-        .call(d3.axisLeft(this.yscale));
+        .call(axisLeft(this.yscale));
        this.chart.select('.xaxis-text')
         .attr('transform','translate('+this.width/2+','+(this.height+30)+')');
        this.chart.select('.yaxis-text')
@@ -135,13 +136,11 @@ export default function(data,resizes){
     };
       
     draw();
-    d3.select('figure')
+    select('figure')
     .append('select')
     .on('change',function(){
-      var selected = d3.select('select').property('value');
+      var selected = select('select').property('value');
       ageHist.filterData(selected);
-      //ageHist.calculateScale();
-      //ageHist.drawAxes();  
       ageHist.convertBins();
       ageHist.drawBars();
     })
@@ -152,7 +151,7 @@ export default function(data,resizes){
     .attr('value',function(d){return d})
     .text(function(d){return d});
      
-     d3.select('#'+ageHist.id+' .loader').remove();
+     select('#'+ageHist.id+' .loader').remove();
      
     resizes.push(resize);
 }
