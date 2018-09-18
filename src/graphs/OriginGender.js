@@ -82,17 +82,30 @@ export default function(data,resizes){
         .attr('class','country')
         .attr('d', this.path)
         .on('mouseover',function(d){
+          var total = d.female+d.male+d.other;
           d3.select(this)
             .attr('opacity','0.8');
           Map.chart
           .append('text')
-          .text((d.female+d.male+d.other)+" coder(s) in " + d.properties.name)
+          .text(total+" coder(s) in " + d.properties.name)
           .attr('class','map-text')
           .attr('text-anchor','left')
           .attr('x',Map.radius*2)
           .attr('y',Map.height);
-          
-        if ((d.female+d.male+d.other)>0){
+        
+          var pointerHeight = Map.legendScale(total);
+          var pointerWidth= Map.outerWidth();
+          var pointerSide = pointerWidth/75;
+          d3.select('#'+Map.id+' svg')
+          .append('polygon')
+          .attr('class','pointer')
+          .attr('points',(pointerWidth+pointerSide*Math.sin(45))+','+(pointerHeight+pointerSide/2)+' '+
+          (pointerWidth+pointerSide*Math.sin(45))+','+(pointerHeight-pointerSide/2)+' '+
+          (pointerWidth-pointerSide)+','+pointerHeight)
+          .attr('transform','translate(0,'+Map.margin.top/2+')');
+        
+        
+        if (total>0){
          var pie=  Map.chart
             .selectAll(".pie")
             .data(Map.pie([{gender:Map.piePalette[0].value,count:d.female,color:Map.piePalette[0].color},
@@ -126,6 +139,7 @@ export default function(data,resizes){
           .attr('opacity','1');
           d3.selectAll('.map-text').remove();
           d3.selectAll('.pie').remove();
+          d3.selectAll('.pointer').remove();
         })
         .style('fill','grey')
         .transition()
@@ -149,22 +163,24 @@ export default function(data,resizes){
         .style("fill", "url(#gradient)");        
       };
       
+
       Map.resizeLegend = function(){
         var width= this.outerWidth();
         var height= this.outerHeight();
+        var pointerSide = width/75;
+        var barWidth = width/50;
         this.legendAxis = d3.axisLeft()
         .scale(this.legendScale)
         .ticks(5);
         
         d3.select('#'+this.id+' .legend-text')
-        .attr('transform','translate('+(width-width/50)+','+this.margin.top/2+')')
+        .attr('transform','translate('+(width-barWidth-pointerSide)+','+this.margin.top/2+')')
         .call(this.legendAxis);
         
         d3.select('#'+this.id+' .legend-bar')
         .attr("width", width/50)
         .attr("height", height-this.margin.top)
-        .attr('transform','translate('+(width-width/50)+','+this.margin.top/2+')');
-        
+        .attr('transform','translate('+(width-barWidth-pointerSide)+','+this.margin.top/2+')');
       };
       
       var draw = function(){
