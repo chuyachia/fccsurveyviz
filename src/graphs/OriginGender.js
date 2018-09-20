@@ -4,7 +4,7 @@ import palette from 'google-palette';
 import {select,json,scalePow,geoPath,geoMercator,selectAll,axisLeft} from "d3";
 
 export default function(data,resizes){
-    var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",margin : {top: 20, right: 20, bottom: 20, left: 20},id:'origin-gender'});
+    var Map = Object.assign({},Graph,Pie, {data:data,title:"Country",margin : {top: 30, right: 30, bottom: 30, left: 30},id:'origin-gender'});
     Map.createChart();
     return json('https://cdn.glitch.com/65fc4036-c50a-4243-9aec-c7cf33c51c9c%2Fworld_countries.json?1535668591645')
     .then(function(geojson) {
@@ -63,7 +63,8 @@ export default function(data,resizes){
         this.radius = this.width/9;
         this.arc = this.createArc(this.radius);
         this.projection = geoMercator()
-        .scale(this.width /2.5/ Math.PI)
+        //.fitSize([this.width, this.outerHeight()], geojson);
+        .scale(this.width /7.5)
         .translate([this.width/2, this.height/2]);      
         this.path = geoPath()
           .projection(this.projection);
@@ -169,9 +170,11 @@ export default function(data,resizes){
         var height= this.outerHeight();
         var pointerSide = width/75;
         var barWidth = width/50;
+        //var ticks = this.legendScale.ticks(5);
+        //ticks.push.apply(ticks,[10,50,100,200,300,400,500,750]);
         this.legendAxis = axisLeft()
         .scale(this.legendScale)
-        .ticks(5);
+        .tickValues([0,10,50,200,500,1000,2000,4000,6000]);
         
         select('#'+this.id+' .legend-text')
         .attr('transform','translate('+(width-barWidth-pointerSide)+','+this.margin.top/2+')')
